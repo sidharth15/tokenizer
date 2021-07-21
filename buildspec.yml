@@ -1,0 +1,27 @@
+version: 0.2
+
+phases:
+  install:
+    on-failure: ABORT
+    runtime-versions:
+      java: corretto8
+    commands:
+      - echo "Nothing to do in custom installation commands for now.."
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - echo "Nothing to do in pre_build phase for now.."
+  build:
+    on-failure: ABORT
+    commands:
+      - echo Build started on `date`
+      - mvn clean install
+  post_build:
+    on-failure: ABORT
+    commands:
+      - echo Nothing to do in post build
+artifacts:
+  files:
+    - '**/queue-request-handler.jar'
+  name: artifact-name-in-buildspec
+  discard-paths: yes
