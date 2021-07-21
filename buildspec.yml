@@ -25,3 +25,4 @@ artifacts:
     - '**/queue-request-handler.jar'
   name: artifact-name-in-buildspec
   discard-paths: yes
+  s3-prefix: jarFiles
