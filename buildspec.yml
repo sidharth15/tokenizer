@@ -22,6 +22,7 @@ phases:
       - echo Copying jar files to common directory
       - mkdir artifacts/
       - cp queue-request-handler/target/queue-request-handler.jar artifacts/
+      - ls artifacts/
       - "aws s3 cp artifacts/* s3://sidharthramesh/codebuild/tokenizer_build/ --recursive"
 artifacts:
   files:
