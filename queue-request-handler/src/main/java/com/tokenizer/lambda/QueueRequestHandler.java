@@ -7,17 +7,35 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tokenizer.lambda.model.SampleResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class QueueRequestHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    public static final String CONTENTTYPE = "Content-Type";
-    public static final String APPLICATION_JSON = "application/json";
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueueRequestHandler.class);
+    private static final String CONTENTTYPE = "Content-Type";
+    private static final String APPLICATION_JSON = "application/json";
 
-    ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper;
+
+    private void init() {
+        LOGGER.info("Initializing Lambda...");
+        this.mapper = new ObjectMapper();
+        LOGGER.info("Initialization complete.");
+    }
+
+    private boolean isInitialized() {
+        return mapper != null;
+    }
 
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
+        if (!isInitialized()) {
+            init();
+        }
+
+        LOGGER.debug("Received event: {}", input);
         APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
         response.setStatusCode(200);
 
@@ -31,6 +49,8 @@ public class QueueRequestHandler implements RequestHandler<APIGatewayProxyReques
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
+
+        LOGGER.info("Response: {}", response);
 
         return response;
     }
