@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tokenizer.lambda.model.SampleResponse;
+import com.tokenizer.lambda.util.ApiGatewayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +46,7 @@ public class QueueRequestHandler implements RequestHandler<APIGatewayProxyReques
         SampleResponse responseBody = new SampleResponse(context.getAwsRequestId(), context.getMemoryLimitInMB(), true);
         try {
             LOGGER.debug("Received event: {}", mapper.writeValueAsString(input));
+            LOGGER.debug("username is {}", ApiGatewayUtil.parseUsername(input));
             response.setBody(mapper.writeValueAsString(responseBody));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
