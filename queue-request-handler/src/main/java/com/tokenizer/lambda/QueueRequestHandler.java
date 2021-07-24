@@ -35,7 +35,6 @@ public class QueueRequestHandler implements RequestHandler<APIGatewayProxyReques
             init();
         }
 
-        LOGGER.debug("Received event: {}", input);
         APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
         response.setStatusCode(200);
 
@@ -45,6 +44,7 @@ public class QueueRequestHandler implements RequestHandler<APIGatewayProxyReques
 
         SampleResponse responseBody = new SampleResponse(context.getAwsRequestId(), context.getMemoryLimitInMB(), true);
         try {
+            LOGGER.debug("Received event: {}", mapper.writeValueAsString(input));
             response.setBody(mapper.writeValueAsString(responseBody));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
