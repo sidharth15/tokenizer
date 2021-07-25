@@ -1,7 +1,6 @@
 package com.tokenizer.lambda;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -12,6 +11,7 @@ import com.tokenizer.lambda.dao.UserRepository;
 import com.tokenizer.lambda.model.SampleResponse;
 import com.tokenizer.lambda.model.users.User;
 import com.tokenizer.lambda.util.ApiGatewayUtil;
+import com.tokenizer.lambda.util.DynamoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,22 +24,22 @@ public class QueueRequestHandler implements RequestHandler<APIGatewayProxyReques
     private static final String APPLICATION_JSON = "application/json";
 
     private ObjectMapper objectMapper;
-    private AmazonDynamoDB dynamoDbClient;
+    private DynamoDBMapper dynamoDBMapper;
     private UserRepository userRepository;
 
     private void init() {
         LOGGER.info("Initializing Lambda...");
 
         this.objectMapper = new ObjectMapper();
-        this.dynamoDbClient = AmazonDynamoDBClientBuilder.standard().build();
-        this.userRepository = new UserRepository(dynamoDbClient);
+        this.dynamoDBMapper = new DynamoDBMapper(DynamoUtil.DYNAMO_CLIENT);
+        this.userRepository = new UserRepository(dynamoDBMapper);
 
         LOGGER.info("Initialization complete.");
     }
 
     private boolean isInitialized() {
         return objectMapper != null
-                && dynamoDbClient != null
+                && dynamoDBMapper != null
                 && userRepository != null;
     }
 

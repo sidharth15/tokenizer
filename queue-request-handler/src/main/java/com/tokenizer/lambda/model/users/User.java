@@ -11,9 +11,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTyped;
 
 import java.util.Objects;
 
-import static com.tokenizer.lambda.model.users.User.TABLE_NAME;
-
-@DynamoDBTable(tableName = TABLE_NAME)
+@DynamoDBTable(tableName = User.TABLE_NAME)
 public class User {
     public static final String TABLE_NAME = "tokenizer_users";
     public static final String QUEUE_GSI = "queue_gsi";
