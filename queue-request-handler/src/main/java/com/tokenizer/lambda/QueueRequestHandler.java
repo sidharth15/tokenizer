@@ -2,7 +2,6 @@ package com.tokenizer.lambda;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -26,7 +25,6 @@ public class QueueRequestHandler implements RequestHandler<APIGatewayProxyReques
 
     private ObjectMapper objectMapper;
     private AmazonDynamoDB dynamoDbClient;
-    private DynamoDBMapper dynamoDBMapper;
     private UserRepository userRepository;
 
     private void init() {
@@ -34,8 +32,7 @@ public class QueueRequestHandler implements RequestHandler<APIGatewayProxyReques
 
         this.objectMapper = new ObjectMapper();
         this.dynamoDbClient = AmazonDynamoDBClientBuilder.standard().build();
-        this.dynamoDBMapper = new DynamoDBMapper(dynamoDbClient);
-        this.userRepository = new UserRepository(dynamoDBMapper);
+        this.userRepository = new UserRepository(dynamoDbClient);
 
         LOGGER.info("Initialization complete.");
     }
@@ -43,7 +40,6 @@ public class QueueRequestHandler implements RequestHandler<APIGatewayProxyReques
     private boolean isInitialized() {
         return objectMapper != null
                 && dynamoDbClient != null
-                && dynamoDBMapper != null
                 && userRepository != null;
     }
 

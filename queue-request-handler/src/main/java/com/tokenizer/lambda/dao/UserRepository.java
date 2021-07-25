@@ -1,5 +1,6 @@
 package com.tokenizer.lambda.dao;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.tokenizer.lambda.model.users.User;
 import org.slf4j.Logger;
@@ -9,8 +10,8 @@ public class UserRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserRepository.class);
     private DynamoDBMapper mapper;
 
-    public UserRepository(DynamoDBMapper mapper) {
-        this.mapper = mapper;
+    public UserRepository(AmazonDynamoDB dynamoDbClient) {
+        this.mapper = new DynamoDBMapper(dynamoDbClient);
     }
 
     public boolean save(User user) {

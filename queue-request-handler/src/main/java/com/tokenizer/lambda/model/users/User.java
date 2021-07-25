@@ -4,8 +4,10 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexRangeKey;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperFieldModel;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTyped;
 
 import java.util.Objects;
 
@@ -23,7 +25,6 @@ public class User {
     public static final String COL_TOKEN_NUM = "token_num";
 
     private String userId;
-    private String name;
     private String queueId;
     private boolean owner;
     private Integer tokenNumber;
@@ -46,15 +47,6 @@ public class User {
         this.userId = userId;
     }
 
-    @DynamoDBAttribute(attributeName = COL_USER_NAME)
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     @DynamoDBRangeKey(attributeName = COL_QUEUE_ID)
     @DynamoDBIndexHashKey(attributeName = COL_QUEUE_ID, globalSecondaryIndexName = QUEUE_GSI)
     public String getQueueId() {
@@ -65,6 +57,7 @@ public class User {
         this.queueId = queueId;
     }
 
+    @DynamoDBTyped(DynamoDBMapperFieldModel.DynamoDBAttributeType.BOOL)
     @DynamoDBAttribute(attributeName = COL_QUEUE_OWNER)
     public boolean isOwner() {
         return owner;
@@ -90,7 +83,6 @@ public class User {
         User user = (User) o;
         return owner == user.owner &&
                 userId.equals(user.userId) &&
-                Objects.equals(name, user.name) &&
                 queueId.equals(user.queueId) &&
                 tokenNumber.equals(user.tokenNumber);
     }
@@ -104,7 +96,6 @@ public class User {
     public String toString() {
         return "User{" +
                 "userId='" + userId + '\'' +
-                ", name='" + name + '\'' +
                 ", queueId='" + queueId + '\'' +
                 ", owner=" + owner +
                 ", tokenNumber=" + tokenNumber +
