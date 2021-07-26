@@ -44,21 +44,33 @@ public class QueueRepository {
     /**
      * Method to update the value of last generated token or last processed token of a Queue.
      * @param queueId The ID of the queue.
-     * @param attributeName The attribute to update - either last_generated_token OR last_processed_token.
+     * @param attributeName The attribute to update on the queue.
      * @param attributeValue The new attribute value.
      * */
     public void update(String queueId, String attributeName, String attributeValue) {
         if (queueId != null && attributeName != null && attributeValue != null) {
+            LOGGER.info("Updating {} with value {} on queue {}", attributeName, attributeValue, queueId);
             AmazonDynamoDB dynamoDB = DynamoUtil.DYNAMO_CLIENT;
             UpdateItemRequest updateItemRequest = new UpdateItemRequest()
                     .withTableName(Queue.TABLE_NAME)
                     .addKeyEntry(Queue.COL_QUEUE_ID, new AttributeValue().withS(queueId))
                     .addAttributeUpdatesEntry(attributeName,
-                            new AttributeValueUpdate().withValue(new AttributeValue().withN(attributeName)));
+                            Queue.COL_DISABLED.equals(attributeName) ?
+                                    new AttributeValueUpdate().withValue(new AttributeValue().withBOOL(Boolean.parseBoolean(attributeValue))) :
+                                    new AttributeValueUpdate().withValue(new AttributeValue().withN(attributeValue)));
 
             dynamoDB.updateItem(updateItemRequest);
         } else {
             LOGGER.warn("Update - {}", WARN_MESSAGE);
+        }
+    }
+
+    public void delete(Queue queueToDelete) {
+        if (isValid(queueToDelete)) {
+            LOGGER.info("Deleting queue {}", queueToDelete);
+            mapper.delete(queueToDelete);
+        } else {
+            LOGGER.warn("Delete - {}", WARN_MESSAGE);
         }
     }
 

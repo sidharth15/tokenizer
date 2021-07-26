@@ -5,6 +5,11 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import java.util.Map;
 
 public class ApiGatewayUtil {
+    public static final String POST = "POST";
+    public static final String PUT = "PUT";
+    public static final String GET = "GET";
+    public static final String DELETE = "DELETE";
+
     /**
      * Method to parse username from an API Gateway event.
      * @param event The API Gateway event.

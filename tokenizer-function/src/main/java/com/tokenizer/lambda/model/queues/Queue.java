@@ -24,6 +24,10 @@ public class Queue {
     private Integer maxSize;
     private boolean disabled;
 
+    public Queue(String queueId) {
+        this.queueId = queueId;
+    }
+
     public Queue(String queueId, Integer lastGeneratedToken, Integer lastProcessedToken, Integer maxSize) {
         this.queueId = queueId;
         this.lastGeneratedToken = lastGeneratedToken;
@@ -92,5 +96,16 @@ public class Queue {
     @Override
     public int hashCode() {
         return Objects.hash(queueId);
+    }
+
+    @Override
+    public String toString() {
+        return "Queue{" +
+                "queueId='" + queueId + '\'' +
+                ", lastGeneratedToken=" + lastGeneratedToken +
+                ", lastProcessedToken=" + lastProcessedToken +
+                ", maxSize=" + maxSize +
+                ", disabled=" + disabled +
+                '}';
     }
 }

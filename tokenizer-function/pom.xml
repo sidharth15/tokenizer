@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>queue-request-handler</artifactId>
+    <artifactId>tokenizer-function</artifactId>
 
     <dependencies>
         <dependency>
@@ -57,7 +57,7 @@
                 <version>3.2.2</version>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
-                    <finalName>queue-request-handler</finalName>
+                    <finalName>tokenizer-function</finalName>
                 </configuration>
                 <executions>
                     <execution>
