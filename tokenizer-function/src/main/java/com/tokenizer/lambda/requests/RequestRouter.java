@@ -17,7 +17,7 @@ public class RequestRouter {
 
     public EventHandler getHandler(APIGatewayProxyRequestEvent input) {
         EventHandler result;
-        String resourcePath = input.getPath();
+        String resourcePath = input.getResource();
 
         switch (resourcePath) {
             case QUEUES:

@@ -68,9 +68,19 @@ public class UserService {
         return deleted;
     }
 
+    /**
+     * Method to check if a user is the owner of a queue.
+     * @param userId The user's ID.
+     * @param queueId The queue's ID.
+     * @return true if the user is the queue's owner.
+     * */
     public boolean isQueueOwner(String userId, String queueId) {
         User userQueueDetails = repository.load(userId, queueId);
         // if we don't find a record of the user owning the queue return false
         return userQueueDetails != null && userQueueDetails.isOwner();
+    }
+
+    public List<User> getSubscribersToQueue(String queueId) {
+        return repository.query(queueId);
     }
 }

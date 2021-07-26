@@ -63,6 +63,25 @@ public class UserRepository {
         return result;
     }
 
+    /**
+     * Method to lookup users that are subscribed to a queue.
+     * @param queueId The ID of the queue to check.
+     * @return List of users subscribed to the queue. Null if queue has no subscribers.
+     * */
+    public List<User> query(String queueId) {
+        List<User> result = null;
+
+        if (queueId != null) {
+            User lookup = new User(null, queueId);
+            DynamoDBQueryExpression<User> queryExpression = new DynamoDBQueryExpression<User>()
+                    .withIndexName(User.QUEUE_GSI)
+                    .withHashKeyValues(lookup);
+            result = mapper.query(User.class, queryExpression);
+        }
+
+        return result;
+    }
+
     public void delete(User userToDelete) {
         if (isValid(userToDelete)) {
             mapper.delete(userToDelete);

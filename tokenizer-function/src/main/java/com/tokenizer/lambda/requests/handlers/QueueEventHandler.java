@@ -1,12 +1,18 @@
 package com.tokenizer.lambda.requests.handlers;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.tokenizer.lambda.model.users.User;
 import com.tokenizer.lambda.requests.EventHandler;
 import com.tokenizer.lambda.service.QueueService;
 import com.tokenizer.lambda.service.UserService;
 import com.tokenizer.lambda.util.ApiGatewayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public class QueueEventHandler implements EventHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(QueueEventHandler.class);
@@ -31,7 +37,10 @@ public class QueueEventHandler implements EventHandler {
                 case ApiGatewayUtil.POST :
                     result = createNewQueue(userId, 50);
                     break;
-
+                case ApiGatewayUtil.DELETE:
+                    String queueToDelete = input.getQueryStringParameters() != null ? input.getQueryStringParameters().get("queue_id"): null;
+                    result = queueToDelete != null ? deleteQueue(queueToDelete, userId) : "false";
+                    break;
                 default:
                     result = "Generic Response - OK";
                     break;
@@ -49,4 +58,31 @@ public class QueueEventHandler implements EventHandler {
 
         return queueId;
     }
+
+    private String deleteQueue(String queueId, String userId) {
+        boolean deleted = false;
+        boolean isOwner = userService.isQueueOwner(userId, queueId);
+
+        if (isOwner) {
+            LOGGER.info("Deleting queue {}", queueId);
+
+            queueService.deleteQueue(queueId);
+
+            // unsubscribe all subscribers from the queue
+            List<User> subscribers = userService.getSubscribersToQueue(queueId);
+            Optional.ofNullable(subscribers)
+                    .map(Collection::stream)
+                    .orElseGet(Stream::empty)
+                    .forEach(subscriber -> {
+                        LOGGER.info("Unsubscribing user {} from queue {}", subscriber.getUserId(), queueId);
+                        userService.unsubscribeUserFromQueue(subscriber.getUserId(), queueId);
+                    });
+            deleted = true;
+        } else {
+            LOGGER.warn("User {} cannot delete queue {}. Not the owner", userId, queueId);
+        }
+
+        return Boolean.toString(deleted);
+    }
+
 }
