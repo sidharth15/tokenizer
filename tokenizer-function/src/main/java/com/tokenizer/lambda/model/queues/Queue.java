@@ -11,7 +11,7 @@ import java.util.Objects;
 @DynamoDBTable(tableName = Queue.TABLE_NAME)
 public class Queue {
     public static final int DEFAULT_MAX_SIZE = 99;
-    public static final String TABLE_NAME = "queues";
+    public static final String TABLE_NAME = "tokenizer_queues";
     public static final String COL_QUEUE_ID = "queue_id";
     public static final String COL_LAST_GEN_TOKEN = "last_generated_token";
     public static final String COL_LAST_PROC_TOKEN = "last_processed_token";
