@@ -57,7 +57,7 @@ public class QueueEventHandler implements EventHandler {
 
                 case ApiGatewayUtil.GET:
                     String queueToDescribe = ApiGatewayUtil.parseQueryStringParameter(input, "queue_id");
-                    result = describeQueue(queueToDescribe);
+                    result = queueToDescribe != null ? describeQueue(queueToDescribe) : "Not found";
                     break;
 
                 default:
@@ -121,12 +121,17 @@ public class QueueEventHandler implements EventHandler {
         return Boolean.toString(deleted);
     }
 
+    /**
+     * Method to describe queue configurations.
+     * @param queueId The ID of the queue.
+     * @return Queue configurations if queue exists, else returns a 'not found' message
+     * */
     public String describeQueue(String queueId) {
         String result = null;
         Queue queueDetails = queueService.describeQueue(queueId);
 
         try {
-            result = mapper.writeValueAsString(queueDetails);
+            result = queueDetails != null ? mapper.writeValueAsString(queueDetails): "Not found";
         } catch (JsonProcessingException e) {
             LOGGER.error("Error occurred while converting queue details: ", e);
         }
