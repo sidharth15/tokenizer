@@ -75,6 +75,7 @@ public class UserRepository {
             User lookup = new User(null, queueId);
             DynamoDBQueryExpression<User> queryExpression = new DynamoDBQueryExpression<User>()
                     .withIndexName(User.QUEUE_GSI)
+                    .withConsistentRead(false)
                     .withHashKeyValues(lookup);
             result = mapper.query(User.class, queryExpression);
         }
