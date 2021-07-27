@@ -59,7 +59,7 @@ public class UserService {
         boolean deleted = false;
 
         try {
-            repository.delete(new User(userId, queueId));
+            deleteUserQueueLink(userId, queueId);
             deleted = true;
         } catch (Exception e) {
             LOGGER.error("Error occurred while un-subscribing user {} from queue {}: {}", userId, queueId, e);
@@ -80,7 +80,21 @@ public class UserService {
         return userQueueDetails != null && userQueueDetails.isOwner();
     }
 
+    /**
+     * Method to list all the subscribers of a queue.
+     * @param queueId The ID of the queue.
+     * @return List of Users who are subscribed to the queue.
+     * */
     public List<User> getSubscribersToQueue(String queueId) {
         return repository.query(queueId);
+    }
+
+    /**
+     * Method to delete item linking a user to a particular queue.
+     * @param userId The ID of the user.
+     * @param queueId The ID of the queue.
+     */
+    public void deleteUserQueueLink(String userId, String queueId) {
+        repository.delete(new User(userId, queueId));
     }
 }

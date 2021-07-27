@@ -66,8 +66,6 @@ public class QueueEventHandler implements EventHandler {
         if (isOwner) {
             LOGGER.info("Deleting queue {}", queueId);
 
-            queueService.deleteQueue(queueId);
-
             // unsubscribe all subscribers from the queue
             List<User> subscribers = userService.getSubscribersToQueue(queueId);
             Optional.ofNullable(subscribers)
@@ -77,6 +75,12 @@ public class QueueEventHandler implements EventHandler {
                         LOGGER.info("Unsubscribing user {} from queue {}", subscriber.getUserId(), queueId);
                         userService.unsubscribeUserFromQueue(subscriber.getUserId(), queueId);
                     });
+
+            // delete the queue status item
+            queueService.deleteQueue(queueId);
+
+            // delete user record of the owner linking to the queue
+            userService.deleteUserQueueLink(userId, queueId);
             deleted = true;
         } else {
             LOGGER.warn("User {} cannot delete queue {}. Not the owner", userId, queueId);
