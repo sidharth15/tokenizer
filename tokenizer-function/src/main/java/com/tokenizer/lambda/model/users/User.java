@@ -27,6 +27,8 @@ public class User {
     private boolean owner;
     private Integer tokenNumber;
 
+    public User() {}
+
     public User(String userId, String queueId) {
         this.userId = userId;
         this.queueId = queueId;

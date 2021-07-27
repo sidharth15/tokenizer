@@ -24,6 +24,8 @@ public class Queue {
     private Integer maxSize;
     private boolean disabled;
 
+    public Queue() {}
+
     public Queue(String queueId) {
         this.queueId = queueId;
     }
