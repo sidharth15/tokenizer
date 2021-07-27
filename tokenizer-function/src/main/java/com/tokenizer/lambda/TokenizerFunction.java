@@ -1,6 +1,7 @@
 package com.tokenizer.lambda;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -37,8 +38,13 @@ public class TokenizerFunction implements RequestHandler<APIGatewayProxyRequestE
     private void init() {
         LOGGER.info("Initializing Lambda...");
 
+        DynamoDBMapperConfig dynamoDBMapperConfig = DynamoDBMapperConfig.builder()
+                .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.PUT)
+                .withConsistentReads(DynamoDBMapperConfig.ConsistentReads.EVENTUAL)
+                .build();
+
         this.objectMapper = new ObjectMapper();
-        this.dynamoDBMapper = new DynamoDBMapper(DynamoUtil.DYNAMO_CLIENT);
+        this.dynamoDBMapper = new DynamoDBMapper(DynamoUtil.DYNAMO_CLIENT, dynamoDBMapperConfig);
         this.userRepository = new UserRepository(dynamoDBMapper);
         this.queueRepository = new QueueRepository(dynamoDBMapper);
         this.userService = new UserService(userRepository);

@@ -24,7 +24,7 @@ public class Queue {
     private Integer lastGeneratedToken;
     private Integer lastProcessedToken;
     private Integer maxSize;
-    private boolean disabled;
+    private Boolean disabled;
 
     public Queue() {}
 
@@ -33,7 +33,7 @@ public class Queue {
     }
 
     public Queue(String queueId, String queueName, Integer lastGeneratedToken,
-                 Integer lastProcessedToken, Integer maxSize, boolean disabled) {
+                 Integer lastProcessedToken, Integer maxSize, Boolean disabled) {
         this.queueId = queueId;
         this.queueName = queueName;
         this.lastGeneratedToken = lastGeneratedToken;
@@ -89,11 +89,11 @@ public class Queue {
 
     @DynamoDBTyped(DynamoDBMapperFieldModel.DynamoDBAttributeType.BOOL)
     @DynamoDBAttribute(attributeName = COL_DISABLED)
-    public boolean isDisabled() {
+    public Boolean isDisabled() {
         return disabled;
     }
 
-    public void setDisabled(boolean disabled) {
+    public void setDisabled(Boolean disabled) {
         this.disabled = disabled;
     }
 
@@ -102,12 +102,12 @@ public class Queue {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Queue queue = (Queue) o;
-        return disabled == queue.disabled &&
-                queueId.equals(queue.queueId) &&
+        return queueId.equals(queue.queueId) &&
                 Objects.equals(queueName, queue.queueName) &&
                 Objects.equals(lastGeneratedToken, queue.lastGeneratedToken) &&
                 Objects.equals(lastProcessedToken, queue.lastProcessedToken) &&
-                Objects.equals(maxSize, queue.maxSize);
+                Objects.equals(maxSize, queue.maxSize) &&
+                Objects.equals(disabled, queue.disabled);
     }
 
     @Override

@@ -1,12 +1,8 @@
 package com.tokenizer.lambda.dao;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.AttributeValueUpdate;
-import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.tokenizer.lambda.model.queues.Queue;
-import com.tokenizer.lambda.util.DynamoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,26 +38,21 @@ public class QueueRepository {
     }
 
     /**
-     * Method to update the value of last generated token or last processed token of a Queue.
-     * @param queueId The ID of the queue.
-     * @param attributeName The attribute to update on the queue.
-     * @param attributeValue The new attribute value.
+     * Method to update a queue attributes.
+     * We do a 'partial' update here using SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES,
+     * so that only non-null attributes are persisted to the database.
+     *
+     * @param queue Queue object with values only for attributes that need to be updated.
      * */
-    public void update(String queueId, String attributeName, String attributeValue) {
-        if (queueId != null && attributeName != null && attributeValue != null) {
-            LOGGER.info("Updating {} with value {} on queue {}", attributeName, attributeValue, queueId);
-            AmazonDynamoDB dynamoDB = DynamoUtil.DYNAMO_CLIENT;
-            UpdateItemRequest updateItemRequest = new UpdateItemRequest()
-                    .withTableName(Queue.TABLE_NAME)
-                    .addKeyEntry(Queue.COL_QUEUE_ID, new AttributeValue().withS(queueId))
-                    .addAttributeUpdatesEntry(attributeName,
-                            Queue.COL_DISABLED.equals(attributeName) ?
-                                    new AttributeValueUpdate().withValue(new AttributeValue().withBOOL(Boolean.parseBoolean(attributeValue))) :
-                                    new AttributeValueUpdate().withValue(new AttributeValue().withN(attributeValue)));
+    public void update(Queue queue) {
+        if (isValid(queue)) {
+            DynamoDBMapperConfig mapperConfig = DynamoDBMapperConfig.builder()
+                    .withSaveBehavior(DynamoDBMapperConfig.SaveBehavior.UPDATE_SKIP_NULL_ATTRIBUTES)
+                    .build();
 
-            dynamoDB.updateItem(updateItemRequest);
+            mapper.save(queue, mapperConfig);
         } else {
-            LOGGER.warn("Update - {}", WARN_MESSAGE);
+            LOGGER.warn("Update");
         }
     }
 

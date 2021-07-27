@@ -37,29 +37,35 @@ public class QueueEventHandler implements EventHandler {
 
         if (userId != null) {
             String httpMethod = input.getHttpMethod();
+            String queueId = ApiGatewayUtil.parseQueryStringParameter(input, Queue.COL_QUEUE_ID);
+            String queueName = ApiGatewayUtil.parseQueryStringParameter(input, Queue.COL_QUEUE_NAME);
+            String queueSize = ApiGatewayUtil.parseQueryStringParameter(input, Queue.COL_MAX_SIZE);
+            String queueDisabled = ApiGatewayUtil.parseQueryStringParameter(input, Queue.COL_DISABLED);
 
             switch (httpMethod) {
                 case ApiGatewayUtil.POST :
-                    String queueName = ApiGatewayUtil.parseQueryStringParameter(input, "queue_name");
-                    String maxSize = ApiGatewayUtil.parseQueryStringParameter(input, "queue_max_size");
-                    String disabled = ApiGatewayUtil.parseQueryStringParameter(input, "disabled");
-
                     result = createNewQueue(
                             userId,
                             queueName != null ? queueName: userId + "_queue_" + input.getRequestContext().getRequestId(),
-                            maxSize != null ? Integer.parseInt(maxSize): Queue.DEFAULT_MAX_SIZE,
-                            Boolean.parseBoolean(disabled)
+                            queueSize != null ? Integer.parseInt(queueDisabled): Queue.DEFAULT_MAX_SIZE,
+                            Boolean.parseBoolean(queueDisabled)
                     );
                     break;
 
                 case ApiGatewayUtil.DELETE:
-                    String queueToDelete = ApiGatewayUtil.parseQueryStringParameter(input, "queue_id");
-                    result = queueToDelete != null ? deleteQueue(queueToDelete, userId) : "false";
+                    result = deleteQueue(queueId, userId);
                     break;
 
                 case ApiGatewayUtil.GET:
-                    String queueToDescribe = ApiGatewayUtil.parseQueryStringParameter(input, "queue_id");
-                    result = queueToDescribe != null ? describeQueue(queueToDescribe) : "Not found";
+                    result = describeQueue(queueId);
+                    break;
+
+                case ApiGatewayUtil.PUT:
+                    result = updateQueue(queueId,
+                            queueName,
+                            queueSize != null ? Integer.parseInt(queueSize): null,
+                            Boolean.parseBoolean(queueDisabled)
+                    );
                     break;
 
                 default:
@@ -94,6 +100,8 @@ public class QueueEventHandler implements EventHandler {
      * @return True if queue was successfully deleted. Else returns false.
      * */
     private String deleteQueue(String queueId, String userId) {
+        if (queueId == null) return Boolean.toString(false);
+
         boolean deleted = false;
         boolean isOwner = userService.isQueueOwner(userId, queueId);
 
@@ -129,6 +137,8 @@ public class QueueEventHandler implements EventHandler {
      * @return Queue configurations if queue exists, else returns a 'not found' message
      * */
     public String describeQueue(String queueId) {
+        if (queueId == null) return "Not found";
+
         String result = null;
         Queue queueDetails = queueService.describeQueue(queueId);
 
@@ -139,5 +149,18 @@ public class QueueEventHandler implements EventHandler {
         }
 
         return result;
+    }
+
+    public String updateQueue(String queueId, String queueName, Integer maxSize, Boolean disabled) {
+        boolean result = false;
+
+        try {
+            queueService.updateQueue(queueId, queueName, maxSize, disabled);
+            result = true;
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while updating queue {}", queueId);
+        }
+
+        return Boolean.toString(result);
     }
 }

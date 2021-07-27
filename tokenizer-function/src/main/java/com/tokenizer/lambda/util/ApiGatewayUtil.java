@@ -9,6 +9,7 @@ public class ApiGatewayUtil {
     public static final String PUT = "PUT";
     public static final String GET = "GET";
     public static final String DELETE = "DELETE";
+    private static final String EMPTY_STRING = "";
 
     /**
      * Method to parse username from an API Gateway event.
@@ -39,7 +40,8 @@ public class ApiGatewayUtil {
         String result = null;
 
         if (event != null && event.getQueryStringParameters() != null) {
-            result = event.getQueryStringParameters().get(parameterName);
+            String paramValue = event.getQueryStringParameters().get(parameterName);
+            result = EMPTY_STRING.equals(paramValue) ? null: paramValue;
         }
 
         return result;

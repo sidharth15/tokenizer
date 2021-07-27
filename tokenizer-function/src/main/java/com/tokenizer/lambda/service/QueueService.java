@@ -22,23 +22,7 @@ public class QueueService {
         repository.delete(new Queue(queueId));
     }
 
-    public void updateQueueMaxSize(String queueId, Integer maxSize) {
-        repository.update(queueId, Queue.COL_MAX_SIZE, maxSize.toString());
-    }
-
-    public void updateQueueLastGeneratedToken(String queueId, Integer lastGeneratedToken) {
-        repository.update(queueId, Queue.COL_LAST_GEN_TOKEN, lastGeneratedToken.toString());
-    }
-
-    public void updateQueueLastProcessedToken(String queueId, Integer lastProcessedToken) {
-        repository.update(queueId, Queue.COL_LAST_PROC_TOKEN, lastProcessedToken.toString());
-    }
-
-    public void enableQueue(String queueId) {
-        repository.update(queueId, Queue.COL_DISABLED, Boolean.FALSE.toString());
-    }
-
-    public void disableQueue(String queueId) {
-        repository.update(queueId, Queue.COL_DISABLED, Boolean.TRUE.toString());
+    public void updateQueue(String queueId, String queueName, Integer maxSize, Boolean disabled) {
+        repository.update(new Queue(queueId, queueName, null, null, maxSize, disabled));
     }
 }
