@@ -40,11 +40,13 @@ public class QueueEventHandler implements EventHandler {
 
             switch (httpMethod) {
                 case ApiGatewayUtil.POST :
+                    String queueName = ApiGatewayUtil.parseQueryStringParameter(input, "queue_name");
                     String maxSize = ApiGatewayUtil.parseQueryStringParameter(input, "queue_max_size");
                     String disabled = ApiGatewayUtil.parseQueryStringParameter(input, "disabled");
 
                     result = createNewQueue(
                             userId,
+                            queueName != null ? queueName: userId + "_queue_" + input.getRequestContext().getRequestId(),
                             maxSize != null ? Integer.parseInt(maxSize): Queue.DEFAULT_MAX_SIZE,
                             Boolean.parseBoolean(disabled)
                     );
@@ -78,9 +80,9 @@ public class QueueEventHandler implements EventHandler {
      * @param disabled The status of the queue to be initialized with.
      * @return The ID of the newly created queue.
      * */
-    private String createNewQueue(String userId, Integer maxSize, boolean disabled) {
+    private String createNewQueue(String userId, String queueName, Integer maxSize, boolean disabled) {
         String queueId = userService.createNewQueueForUser(userId);
-        queueService.initNewQueue(queueId, maxSize, disabled);
+        queueService.initNewQueue(queueId, queueName, maxSize, disabled);
 
         return queueId;
     }

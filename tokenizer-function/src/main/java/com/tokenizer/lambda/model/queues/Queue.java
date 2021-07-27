@@ -13,12 +13,14 @@ public class Queue {
     public static final int DEFAULT_MAX_SIZE = 99;
     public static final String TABLE_NAME = "tokenizer_queues";
     public static final String COL_QUEUE_ID = "queue_id";
+    public static final String COL_QUEUE_NAME = "queue_name";
     public static final String COL_LAST_GEN_TOKEN = "last_generated_token";
     public static final String COL_LAST_PROC_TOKEN = "last_processed_token";
     public static final String COL_MAX_SIZE = "max_size";
     public static final String COL_DISABLED = "disabled";
 
     private String queueId;
+    private String queueName;
     private Integer lastGeneratedToken;
     private Integer lastProcessedToken;
     private Integer maxSize;
@@ -30,8 +32,10 @@ public class Queue {
         this.queueId = queueId;
     }
 
-    public Queue(String queueId, Integer lastGeneratedToken, Integer lastProcessedToken, Integer maxSize, boolean disabled) {
+    public Queue(String queueId, String queueName, Integer lastGeneratedToken,
+                 Integer lastProcessedToken, Integer maxSize, boolean disabled) {
         this.queueId = queueId;
+        this.queueName = queueName;
         this.lastGeneratedToken = lastGeneratedToken;
         this.lastProcessedToken = lastProcessedToken;
         this.maxSize = maxSize != null ? maxSize : DEFAULT_MAX_SIZE;
@@ -45,6 +49,15 @@ public class Queue {
 
     public void setQueueId(String queueId) {
         this.queueId = queueId;
+    }
+
+    @DynamoDBAttribute(attributeName = COL_QUEUE_NAME)
+    public String getQueueName() {
+        return queueName;
+    }
+
+    public void setQueueName(String queueName) {
+        this.queueName = queueName;
     }
 
     @DynamoDBAttribute(attributeName = COL_LAST_GEN_TOKEN)
@@ -91,6 +104,7 @@ public class Queue {
         Queue queue = (Queue) o;
         return disabled == queue.disabled &&
                 queueId.equals(queue.queueId) &&
+                Objects.equals(queueName, queue.queueName) &&
                 Objects.equals(lastGeneratedToken, queue.lastGeneratedToken) &&
                 Objects.equals(lastProcessedToken, queue.lastProcessedToken) &&
                 Objects.equals(maxSize, queue.maxSize);
@@ -105,6 +119,7 @@ public class Queue {
     public String toString() {
         return "Queue{" +
                 "queueId='" + queueId + '\'' +
+                ", queueName='" + queueName + '\'' +
                 ", lastGeneratedToken=" + lastGeneratedToken +
                 ", lastProcessedToken=" + lastProcessedToken +
                 ", maxSize=" + maxSize +

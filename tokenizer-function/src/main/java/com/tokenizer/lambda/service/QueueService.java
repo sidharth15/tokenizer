@@ -10,8 +10,8 @@ public class QueueService {
         this.repository = repository;
     }
 
-    public void initNewQueue(String queueId, Integer maxSize, boolean disabled) {
-        repository.save(new Queue(queueId, 0,0, maxSize, disabled));
+    public void initNewQueue(String queueId, String queueName, Integer maxSize, boolean disabled) {
+        repository.save(new Queue(queueId, queueName,0,0, maxSize, disabled));
     }
 
     public Queue describeQueue(String queueId) {
