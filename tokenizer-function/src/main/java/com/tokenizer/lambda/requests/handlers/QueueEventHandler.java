@@ -1,6 +1,9 @@
 package com.tokenizer.lambda.requests.handlers;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tokenizer.lambda.model.queues.Queue;
 import com.tokenizer.lambda.model.users.User;
 import com.tokenizer.lambda.requests.EventHandler;
 import com.tokenizer.lambda.service.QueueService;
@@ -19,10 +22,12 @@ public class QueueEventHandler implements EventHandler {
 
     private UserService userService;
     private QueueService queueService;
+    private ObjectMapper mapper;
 
-    public QueueEventHandler(UserService userService, QueueService queueService) {
+    public QueueEventHandler(UserService userService, QueueService queueService, ObjectMapper mapper) {
         this.userService = userService;
         this.queueService = queueService;
+        this.mapper = mapper;
     }
 
     @Override
@@ -35,12 +40,26 @@ public class QueueEventHandler implements EventHandler {
 
             switch (httpMethod) {
                 case ApiGatewayUtil.POST :
-                    result = createNewQueue(userId, 50);
+                    String maxSize = ApiGatewayUtil.parseQueryStringParameter(input, "queue_max_size");
+                    String disabled = ApiGatewayUtil.parseQueryStringParameter(input, "disabled");
+
+                    result = createNewQueue(
+                            userId,
+                            maxSize != null ? Integer.parseInt(maxSize): Queue.DEFAULT_MAX_SIZE,
+                            Boolean.parseBoolean(disabled)
+                    );
                     break;
+
                 case ApiGatewayUtil.DELETE:
-                    String queueToDelete = input.getQueryStringParameters() != null ? input.getQueryStringParameters().get("queue_id"): null;
+                    String queueToDelete = ApiGatewayUtil.parseQueryStringParameter(input, "queue_id");
                     result = queueToDelete != null ? deleteQueue(queueToDelete, userId) : "false";
                     break;
+
+                case ApiGatewayUtil.GET:
+                    String queueToDescribe = ApiGatewayUtil.parseQueryStringParameter(input, "queue_id");
+                    result = describeQueue(queueToDescribe);
+                    break;
+
                 default:
                     result = "Generic Response - OK";
                     break;
@@ -52,13 +71,26 @@ public class QueueEventHandler implements EventHandler {
         return result;
     }
 
-    private String createNewQueue(String userId, Integer maxSize) {
+    /**
+     * Method to handle creation of a new queue.
+     * @param userId The ID of the user creating the queue.
+     * @param maxSize The max size of the queue.
+     * @param disabled The status of the queue to be initialized with.
+     * @return The ID of the newly created queue.
+     * */
+    private String createNewQueue(String userId, Integer maxSize, boolean disabled) {
         String queueId = userService.createNewQueueForUser(userId);
-        queueService.initNewQueue(queueId, maxSize);
+        queueService.initNewQueue(queueId, maxSize, disabled);
 
         return queueId;
     }
 
+    /**
+     * Method to delete a queue and unsubscribe all subscribers of the queue.
+     * @param queueId The ID of the queue to delete.
+     * @param userId The ID of the user invoking the delete request.
+     * @return True if queue was successfully deleted. Else returns false.
+     * */
     private String deleteQueue(String queueId, String userId) {
         boolean deleted = false;
         boolean isOwner = userService.isQueueOwner(userId, queueId);
@@ -89,4 +121,16 @@ public class QueueEventHandler implements EventHandler {
         return Boolean.toString(deleted);
     }
 
+    public String describeQueue(String queueId) {
+        String result = null;
+        Queue queueDetails = queueService.describeQueue(queueId);
+
+        try {
+            result = mapper.writeValueAsString(queueDetails);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Error occurred while converting queue details: ", e);
+        }
+
+        return result;
+    }
 }

@@ -30,11 +30,12 @@ public class Queue {
         this.queueId = queueId;
     }
 
-    public Queue(String queueId, Integer lastGeneratedToken, Integer lastProcessedToken, Integer maxSize) {
+    public Queue(String queueId, Integer lastGeneratedToken, Integer lastProcessedToken, Integer maxSize, boolean disabled) {
         this.queueId = queueId;
         this.lastGeneratedToken = lastGeneratedToken;
         this.lastProcessedToken = lastProcessedToken;
         this.maxSize = maxSize != null ? maxSize : DEFAULT_MAX_SIZE;
+        this.disabled = disabled;
     }
 
     @DynamoDBHashKey(attributeName = COL_QUEUE_ID)

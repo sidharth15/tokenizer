@@ -43,7 +43,7 @@ public class TokenizerFunction implements RequestHandler<APIGatewayProxyRequestE
         this.queueRepository = new QueueRepository(dynamoDBMapper);
         this.userService = new UserService(userRepository);
         this.queueService = new QueueService(queueRepository);
-        this.router = RequestRouterFactory.createRequestRouter(userService, queueService);
+        this.router = RequestRouterFactory.createRequestRouter(userService, queueService, objectMapper);
 
         LOGGER.info("Initialization complete.");
     }

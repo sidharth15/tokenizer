@@ -27,4 +27,21 @@ public class ApiGatewayUtil {
 
         return username;
     }
+
+    /**
+     * Method to parse the value for a query string parameter
+     * from the API Gateway request event.
+     * @param event The input API Gateway request event.
+     * @param parameterName The query string parameter name.
+     * @return Value of the query string parameter as a String if it exists. Else returns null.
+     * */
+    public static String parseQueryStringParameter(APIGatewayProxyRequestEvent event, String parameterName) {
+        String result = null;
+
+        if (event != null && event.getQueryStringParameters() != null) {
+            result = event.getQueryStringParameters().get(parameterName);
+        }
+
+        return result;
+    }
 }
