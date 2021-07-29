@@ -177,7 +177,7 @@ public class QueueEventHandler implements EventHandler {
             queueService.updateQueue(queueId, queueName, size, disabledStatus);
             result = true;
         } catch (Exception e) {
-            LOGGER.error("Exception occurred while updating queue {}", queueId);
+            LOGGER.error("Exception occurred while updating queue {}", queueId, e);
         }
 
         return Boolean.toString(result);
