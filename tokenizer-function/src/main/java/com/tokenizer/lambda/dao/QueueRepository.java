@@ -3,11 +3,13 @@ package com.tokenizer.lambda.dao;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.tokenizer.lambda.model.queues.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,7 +60,9 @@ public class QueueRepository {
 
             // update the queue only if it already exists
             Map<String, ExpectedAttributeValue> expectedAttributes = new HashMap<String, ExpectedAttributeValue>() {{
-                put(Queue.COL_QUEUE_ID, new ExpectedAttributeValue().withExists(true));
+                put(Queue.COL_QUEUE_ID, new ExpectedAttributeValue()
+                        .withAttributeValueList(Collections.singletonList(new AttributeValue().withS(queue.getQueueId())))
+                        .withExists(true));
             }};
             DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression().withExpected(expectedAttributes);
             mapper.save(queue, saveExpression, mapperConfig);
