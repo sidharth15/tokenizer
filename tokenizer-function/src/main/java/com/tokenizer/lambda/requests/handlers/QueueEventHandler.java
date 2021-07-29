@@ -47,9 +47,8 @@ public class QueueEventHandler implements EventHandler {
                     result = createNewQueue(
                             userId,
                             queueName != null ? queueName: userId + "_queue_" + input.getRequestContext().getRequestId(),
-                            queueSize != null ? Integer.parseInt(queueDisabled): Queue.DEFAULT_MAX_SIZE,
-                            Boolean.parseBoolean(queueDisabled)
-                    );
+                            queueSize,
+                            queueDisabled);
                     break;
 
                 case ApiGatewayUtil.DELETE:
@@ -61,11 +60,7 @@ public class QueueEventHandler implements EventHandler {
                     break;
 
                 case ApiGatewayUtil.PUT:
-                    result = updateQueue(queueId,
-                            queueName,
-                            queueSize != null ? Integer.parseInt(queueSize): null,
-                            Boolean.parseBoolean(queueDisabled)
-                    );
+                    result = updateQueue(queueId, queueName, queueSize, queueDisabled);
                     break;
 
                 default:
@@ -86,9 +81,17 @@ public class QueueEventHandler implements EventHandler {
      * @param disabled The status of the queue to be initialized with.
      * @return The ID of the newly created queue.
      * */
-    private String createNewQueue(String userId, String queueName, Integer maxSize, boolean disabled) {
+    private String createNewQueue(String userId, String queueName, String maxSize, String disabled) {
+        Integer size;
+        boolean disabledStatus = Boolean.parseBoolean(disabled);
+        try {
+            size = Integer.parseInt(maxSize);
+        } catch (NumberFormatException e) {
+            size = Queue.DEFAULT_MAX_SIZE;
+        }
+
         String queueId = userService.createNewQueueForUser(userId);
-        queueService.initNewQueue(queueId, queueName, maxSize, disabled);
+        queueService.initNewQueue(queueId, queueName, size, disabledStatus);
 
         return queueId;
     }
@@ -151,11 +154,27 @@ public class QueueEventHandler implements EventHandler {
         return result;
     }
 
-    public String updateQueue(String queueId, String queueName, Integer maxSize, Boolean disabled) {
+    public String updateQueue(String queueId, String queueName, String maxSize, String disabled) {
         boolean result = false;
+        Integer size = null;
+        Boolean disabledStatus = null;
 
         try {
-            queueService.updateQueue(queueId, queueName, maxSize, disabled);
+            size = Integer.parseInt(maxSize);
+        } catch (NumberFormatException e) {}
+
+        // we need to explicitly check like this so we don't overwrite
+        // the queue's current status when the user does not wish to.
+        if (disabled != null) {
+            if (disabled.equalsIgnoreCase(Boolean.TRUE.toString())) {
+                disabledStatus = Boolean.TRUE;
+            } else if (disabled.equalsIgnoreCase(Boolean.FALSE.toString())) {
+                disabledStatus = Boolean.FALSE;
+            }
+        }
+
+        try {
+            queueService.updateQueue(queueId, queueName, size, disabledStatus);
             result = true;
         } catch (Exception e) {
             LOGGER.error("Exception occurred while updating queue {}", queueId);

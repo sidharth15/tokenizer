@@ -1,6 +1,7 @@
 package com.tokenizer.lambda.util;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.tokenizer.lambda.model.queues.Queue;
 
 import java.util.Map;
 
@@ -39,11 +40,56 @@ public class ApiGatewayUtil {
     public static String parseQueryStringParameter(APIGatewayProxyRequestEvent event, String parameterName) {
         String result = null;
 
-        if (event != null && event.getQueryStringParameters() != null) {
+        if (isQueryStringParametersValid(event)) {
             String paramValue = event.getQueryStringParameters().get(parameterName);
             result = EMPTY_STRING.equals(paramValue) ? null: paramValue;
         }
 
         return result;
+    }
+
+    /**
+     * Method to parse the queue max size parameter as an Integer
+     * from the API Gateway request event.
+     * @param event The input API Gaeway request event.
+     * @return Integer object with maxSize value if specified in the request.
+     * Else returns default queue size.
+     * */
+    public static Integer parseQueueMaxSize(APIGatewayProxyRequestEvent event) {
+        Integer result = null;
+
+        if (isQueryStringParametersValid(event)) {
+            String paramValue = event.getQueryStringParameters().get(Queue.COL_MAX_SIZE);
+
+            try {
+                result = Integer.parseInt(paramValue);
+            } catch (NumberFormatException e) {
+                result = Queue.DEFAULT_MAX_SIZE;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Method to parse queue disabled status from input
+     * API Gateway request event.
+     * @param event The input API Gateway request event.
+     * @return boolean value of disabled status if specified in the request.
+     * Else returns false.
+     * */
+    public static boolean parseQueueDisabledStatus(APIGatewayProxyRequestEvent event) {
+        boolean result = false;
+
+        if (isQueryStringParametersValid(event)) {
+            String paramValue = event.getQueryStringParameters().get(Queue.COL_DISABLED);
+            result = Boolean.parseBoolean(paramValue);
+        }
+
+        return result;
+    }
+
+    private static boolean isQueryStringParametersValid(APIGatewayProxyRequestEvent event) {
+        return event != null && event.getQueryStringParameters() != null;
     }
 }
