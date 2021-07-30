@@ -3,6 +3,8 @@ package com.tokenizer.lambda.dao;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
+import com.amazonaws.services.dynamodbv2.datamodeling.ScanResultPage;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.tokenizer.lambda.model.queues.Queue;
@@ -77,6 +79,17 @@ public class QueueRepository {
         } else {
             LOGGER.warn("Delete - {}", WARN_MESSAGE);
         }
+    }
+
+    public ScanResultPage<Queue> scan(String paginationToken) {
+        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
+        if (paginationToken != null) {
+            scanExpression.withExclusiveStartKey(new HashMap<String, AttributeValue>() {{
+                put(Queue.COL_QUEUE_ID, new AttributeValue(paginationToken));
+            }});
+        }
+
+        return mapper.scanPage(Queue.class, scanExpression);
     }
 
     private boolean isValid(Queue queue) {

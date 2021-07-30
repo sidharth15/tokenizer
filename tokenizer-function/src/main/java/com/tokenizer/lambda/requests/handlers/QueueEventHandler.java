@@ -64,7 +64,7 @@ public class QueueEventHandler implements EventHandler {
                     break;
 
                 default:
-                    result = "Generic Response - OK";
+                    result = "Invalid method accessed";
                     break;
             }
         } else {
