@@ -51,7 +51,10 @@ public class ListQueuesEventHandler implements EventHandler {
                             buildFailureMessage("Invalid method requested"));
                     break;
             }
+        } else {
+            LOGGER.error("No user_id information found. User is not logged in.");
         }
+
 
         return result;
     }
