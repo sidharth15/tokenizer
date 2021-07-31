@@ -1,12 +1,16 @@
 package com.tokenizer.lambda.dao;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDeleteExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.tokenizer.lambda.model.users.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UserRepository {
     private static final String WARN_MESSAGE = "Entity is null or no user_id/queue_id provided.";
@@ -83,9 +87,36 @@ public class UserRepository {
         return result;
     }
 
-    public void delete(User userToDelete) {
+    /**
+     * Method to delete link between a user and queue.
+     * Can be used for un-subscribing a user from queue and
+     * also to delete a user's ownership of a queue - depending
+     * on the value passed for the unsubscribeOnly parameter.
+     *
+     * @param userToDelete The user to un-subscribing from a queue.
+     *
+     * @param unsubscribeOnly Flag indicating whether to delete the link
+     *                        if user is the owner of the queue.
+     *                        If set to True, delete will be successful only if the user
+     *                        does not own the queue. In other words, only un-subscribe
+     *                        action will take place.
+     *                        If set to False, delete will be successful only if the user
+     *                        owns the queue.
+     * */
+    public void delete(User userToDelete, boolean unsubscribeOnly) {
         if (isValid(userToDelete)) {
-            mapper.delete(userToDelete);
+            Map<String, String> ean = new HashMap<String, String>() {{
+                put("#owner", User.COL_QUEUE_OWNER);
+            }};
+            Map<String, AttributeValue> eav = new HashMap<String, AttributeValue>() {{
+                put(":owner", new AttributeValue().withBOOL(!unsubscribeOnly));
+            }};
+            DynamoDBDeleteExpression deleteExpression = new DynamoDBDeleteExpression()
+                    .withConditionExpression("#owner = :owner")
+                    .withExpressionAttributeNames(ean)
+                    .withExpressionAttributeValues(eav);
+
+            mapper.delete(userToDelete, deleteExpression);
         } else {
             LOGGER.warn("Delete - {}", WARN_MESSAGE);
         }

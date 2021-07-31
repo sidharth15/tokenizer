@@ -121,7 +121,7 @@ public class QueueEventHandler implements EventHandler {
      * */
     private boolean deleteQueue(String queueId, String userId) {
         boolean deleted = false;
-        if (queueId == null) return deleted;
+        if (queueId == null) return false;
 
         boolean isOwner = userService.isQueueOwner(userId, queueId);
 
@@ -142,7 +142,7 @@ public class QueueEventHandler implements EventHandler {
             queueService.deleteQueue(queueId);
 
             // delete user record of the owner linking to the queue
-            userService.deleteUserQueueLink(userId, queueId);
+            userService.deleteUserQueueLink(userId, queueId, false);
             deleted = true;
         } else {
             LOGGER.warn("User {} cannot delete queue {}. Not the owner", userId, queueId);

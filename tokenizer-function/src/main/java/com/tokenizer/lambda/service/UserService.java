@@ -62,10 +62,9 @@ public class UserService {
         boolean deleted = false;
 
         try {
-            if (!isQueueOwner(userId, queueId)) {
-                deleteUserQueueLink(userId, queueId);
-                deleted = true;
-            }
+            deleteUserQueueLink(userId, queueId, true);
+            deleted = true;
+
         } catch (Exception e) {
             LOGGER.error("Error occurred while un-subscribing user {} from queue {}: {}", userId, queueId, e);
         }
@@ -98,8 +97,10 @@ public class UserService {
      * Method to delete item linking a user to a particular queue.
      * @param userId The ID of the user.
      * @param queueId The ID of the queue.
+     * @param unsubscribeOnly Flag to indicate if only want to un-subscribe
+     *                        or delete the queue altogether.
      */
-    public void deleteUserQueueLink(String userId, String queueId) {
-        repository.delete(new User(userId, queueId));
+    public void deleteUserQueueLink(String userId, String queueId, boolean unsubscribeOnly) {
+        repository.delete(new User(userId, queueId), unsubscribeOnly);
     }
 }
