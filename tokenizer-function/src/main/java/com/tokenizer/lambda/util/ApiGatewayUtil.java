@@ -95,9 +95,9 @@ public class ApiGatewayUtil {
     }
 
     public static String getResponseJsonString(ObjectMapper mapper, ResponseModel response) {
-        String result = null;
+        String result;
         try {
-            mapper.writeValueAsString(response);
+            result = mapper.writeValueAsString(response);
         } catch (JsonProcessingException e) {
             result = RESPONSE_ERROR_JSON;
         }
