@@ -6,6 +6,7 @@ import com.tokenizer.lambda.util.QueueUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserService {
@@ -23,7 +24,9 @@ public class UserService {
      * @return List of User objects, each pointing to a separate Queue. Null if no items were found for the user.
      * */
     public List<User> describeUser(String userId) {
-        return repository.load(userId);
+        List<User> queuesForUser = repository.load(userId);
+
+        return queuesForUser != null ? queuesForUser: new ArrayList<>();
     }
 
     /**
