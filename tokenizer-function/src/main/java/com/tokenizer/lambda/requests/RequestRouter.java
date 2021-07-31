@@ -37,6 +37,9 @@ public class RequestRouter {
             case QUEUE:
                 result = queueRequestHandler;
                 break;
+            case USER:
+                result = userEventHandler;
+                break;
             default:
                 result = genericResponseHandler;
                 break;
