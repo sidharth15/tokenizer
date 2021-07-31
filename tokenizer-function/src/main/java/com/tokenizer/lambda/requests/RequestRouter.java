@@ -2,16 +2,20 @@ package com.tokenizer.lambda.requests;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.tokenizer.lambda.requests.handlers.GenericResponseHandler;
+import com.tokenizer.lambda.requests.handlers.ListQueuesEventHandler;
 import com.tokenizer.lambda.requests.handlers.QueueEventHandler;
 
 public class RequestRouter {
-    private static final String QUEUES = "/queues/queue";
+    private static final String QUEUE = "/queues/queue";
+    private static final String QUEUES = "/queues";
 
     private QueueEventHandler queueRequestHandler;
+    private ListQueuesEventHandler listQueuesEventHandler;
     private GenericResponseHandler genericResponseHandler;
 
-    public RequestRouter(QueueEventHandler queueRequestHandler, GenericResponseHandler genericResponseHandler) {
+    public RequestRouter(QueueEventHandler queueRequestHandler, ListQueuesEventHandler listQueuesEventHandler, GenericResponseHandler genericResponseHandler) {
         this.queueRequestHandler = queueRequestHandler;
+        this.listQueuesEventHandler = listQueuesEventHandler;
         this.genericResponseHandler = genericResponseHandler;
     }
 
@@ -21,6 +25,9 @@ public class RequestRouter {
 
         switch (resourcePath) {
             case QUEUES:
+                result = listQueuesEventHandler;
+                break;
+            case QUEUE:
                 result = queueRequestHandler;
                 break;
             default:

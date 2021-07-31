@@ -1,7 +1,10 @@
 package com.tokenizer.lambda.util;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tokenizer.lambda.model.queues.Queue;
+import com.tokenizer.lambda.model.response.ResponseModel;
 
 import java.util.Map;
 
@@ -10,7 +13,9 @@ public class ApiGatewayUtil {
     public static final String PUT = "PUT";
     public static final String GET = "GET";
     public static final String DELETE = "DELETE";
+    public static final String PAGINATION_TOKEN = "pagination_token";
     private static final String EMPTY_STRING = "";
+    private static final String RESPONSE_ERROR_JSON = "{\"statusCode\":\"502\", \"message\": \"An unexpected error occurred\"}";
 
     /**
      * Method to parse username from an API Gateway event.
@@ -84,6 +89,17 @@ public class ApiGatewayUtil {
         if (isQueryStringParametersValid(event)) {
             String paramValue = event.getQueryStringParameters().get(Queue.COL_DISABLED);
             result = Boolean.parseBoolean(paramValue);
+        }
+
+        return result;
+    }
+
+    public static String getResponseJsonString(ObjectMapper mapper, ResponseModel response) {
+        String result = null;
+        try {
+            mapper.writeValueAsString(response);
+        } catch (JsonProcessingException e) {
+            result = RESPONSE_ERROR_JSON;
         }
 
         return result;
