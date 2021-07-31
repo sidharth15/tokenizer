@@ -32,6 +32,7 @@ public class UserEventHandler implements EventHandler {
         if (userId != null) {
             String httpMethod = input.getHttpMethod();
             String owner = ApiGatewayUtil.parseQueryStringParameter(input, User.COL_QUEUE_OWNER);
+            String queueId = ApiGatewayUtil.parseQueryStringParameter(input, User.COL_QUEUE_ID);
 
             switch (httpMethod) {
                 case ApiGatewayUtil.GET:
@@ -42,6 +43,12 @@ public class UserEventHandler implements EventHandler {
                         LOGGER.error("Error occurred while describing user {}", userId, e);
                         response = buildFailureResponse(502, "An unexpected error occurred.");
                     }
+                    break;
+
+                case ApiGatewayUtil.DELETE:
+                    response = unsubscribeFromQueue(userId, queueId) ?
+                            buildSuccessResponse(null, ResponseModel.SUCCESS_MESSAGE) :
+                            buildFailureResponse(502, ResponseModel.FAILURE_MESSAGE);
                     break;
 
                 default:
@@ -60,6 +67,17 @@ public class UserEventHandler implements EventHandler {
         return ownedByUser ?
                 userQueues.stream().filter(User::isOwner).collect(Collectors.toList()):
                 userQueues;
+    }
+
+    private boolean unsubscribeFromQueue(String userId, String queueId) {
+        boolean success = false;
+        try {
+            success = userService.unsubscribeUserFromQueue(userId, queueId);
+        } catch (Exception e) {
+            LOGGER.error("Error occurred while unsubscribing user {} from queue {}", userId, queueId, e);
+        }
+
+        return success;
     }
 
     private ResponseModel<List<User>> buildSuccessResponse(List<User> users, String message) {
