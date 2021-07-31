@@ -1,9 +1,9 @@
 package com.tokenizer.lambda.requests.handlers;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tokenizer.lambda.model.queues.Queue;
+import com.tokenizer.lambda.model.response.ResponseModel;
 import com.tokenizer.lambda.model.users.User;
 import com.tokenizer.lambda.requests.EventHandler;
 import com.tokenizer.lambda.service.QueueService;
@@ -32,7 +32,7 @@ public class QueueEventHandler implements EventHandler {
 
     @Override
     public String handleEvent(APIGatewayProxyRequestEvent input) {
-        String result = null;
+        ResponseModel<Queue> response;
         String userId = ApiGatewayUtil.parseUsername(input);
 
         if (userId != null) {
@@ -44,34 +44,51 @@ public class QueueEventHandler implements EventHandler {
 
             switch (httpMethod) {
                 case ApiGatewayUtil.POST :
-                    result = createNewQueue(
+
+                    String newQueueId = createNewQueue(
                             userId,
                             queueName != null ? queueName: userId + "_queue_" + input.getRequestContext().getRequestId(),
                             queueSize,
                             queueDisabled);
+
+                    if (newQueueId != null) {
+                        response = buildSuccessMessage(new Queue(newQueueId), ResponseModel.SUCCESS_MESSAGE);
+                    } else {
+                        response = buildFailureMessage(502, "Failed to create queue");
+                    }
                     break;
 
                 case ApiGatewayUtil.DELETE:
-                    result = deleteQueue(queueId, userId);
+                    response = deleteQueue(queueId, userId) ?
+                            buildSuccessMessage(null, "Successfully deleted queue " + queueId) :
+                            buildFailureMessage(502, "Failed to delete queue " + queueId);
                     break;
 
                 case ApiGatewayUtil.GET:
-                    result = describeQueue(queueId);
+                    Queue queueDetails = describeQueue(queueId);
+                    response = queueDetails != null ?
+                            buildSuccessMessage(queueDetails, ResponseModel.SUCCESS_MESSAGE):
+                            buildFailureMessage(404, "Queue with id " + queueId + " not found.");
                     break;
 
                 case ApiGatewayUtil.PUT:
-                    result = updateQueue(queueId, queueName, queueSize, queueDisabled);
+                    response = updateQueue(queueId, queueName, queueSize, queueDisabled) ?
+                            buildSuccessMessage(null, ResponseModel.SUCCESS_MESSAGE) :
+                            buildFailureMessage(502, "Failed to update queue.");
                     break;
 
                 default:
-                    result = "Invalid method accessed";
+                    response = new ResponseModel<>(400, "Invalid method request.", null, null);
                     break;
             }
         } else {
-            LOGGER.error("No user_id information found. User is not logged in.");
+            response = new ResponseModel<>(
+                    401,
+                    "No user_id information found. User is not logged in.",
+                    null, null);
         }
 
-        return result;
+        return ApiGatewayUtil.getResponseJsonString(mapper, response);
     }
 
     /**
@@ -102,10 +119,10 @@ public class QueueEventHandler implements EventHandler {
      * @param userId The ID of the user invoking the delete request.
      * @return True if queue was successfully deleted. Else returns false.
      * */
-    private String deleteQueue(String queueId, String userId) {
-        if (queueId == null) return Boolean.toString(false);
-
+    private boolean deleteQueue(String queueId, String userId) {
         boolean deleted = false;
+        if (queueId == null) return deleted;
+
         boolean isOwner = userService.isQueueOwner(userId, queueId);
 
         if (isOwner) {
@@ -131,30 +148,25 @@ public class QueueEventHandler implements EventHandler {
             LOGGER.warn("User {} cannot delete queue {}. Not the owner", userId, queueId);
         }
 
-        return Boolean.toString(deleted);
+        return deleted;
     }
 
     /**
      * Method to describe queue configurations.
      * @param queueId The ID of the queue.
-     * @return Queue configurations if queue exists, else returns a 'not found' message
+     * @return Queue configurations if queue exists, else returns null.
      * */
-    public String describeQueue(String queueId) {
-        if (queueId == null) return "Not found";
+    private Queue describeQueue(String queueId) {
+        Queue queueDetails = null;
 
-        String result = null;
-        Queue queueDetails = queueService.describeQueue(queueId);
-
-        try {
-            result = queueDetails != null ? mapper.writeValueAsString(queueDetails): "Not found";
-        } catch (JsonProcessingException e) {
-            LOGGER.error("Error occurred while converting queue details: ", e);
+        if (queueId != null) {
+            queueDetails = queueService.describeQueue(queueId);
         }
 
-        return result;
+        return queueDetails;
     }
 
-    public String updateQueue(String queueId, String queueName, String maxSize, String disabled) {
+    private boolean updateQueue(String queueId, String queueName, String maxSize, String disabled) {
         boolean result = false;
         Integer size = null;
         Boolean disabledStatus = null;
@@ -180,6 +192,14 @@ public class QueueEventHandler implements EventHandler {
             LOGGER.error("Exception occurred while updating queue {}", queueId, e);
         }
 
-        return Boolean.toString(result);
+        return result;
+    }
+
+    private ResponseModel<Queue> buildSuccessMessage(Queue queue, String message) {
+        return new ResponseModel<>(200, message, queue, null);
+    }
+
+    private ResponseModel<Queue> buildFailureMessage(int statusCode, String errorMessage) {
+        return new ResponseModel<>(statusCode, errorMessage, null, null);
     }
 }
