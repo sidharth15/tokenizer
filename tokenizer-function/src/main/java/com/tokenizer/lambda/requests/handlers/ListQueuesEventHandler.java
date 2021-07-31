@@ -36,8 +36,11 @@ public class ListQueuesEventHandler implements EventHandler {
                     try {
                         List<Queue> queueList = queueService.listQueues(paginationToken);
 
+                        LOGGER.debug("Number of queues retrieved: {}", queueList.size());
                         result = ApiGatewayUtil.getResponseJsonString(mapper,
                                 buildSuccessMessage(queueList, paginationToken));
+
+                        LOGGER.debug("Prepared response: {}", result);
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while listing queues: ", e);
 
