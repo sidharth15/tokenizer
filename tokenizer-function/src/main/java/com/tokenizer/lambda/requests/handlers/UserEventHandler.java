@@ -48,7 +48,7 @@ public class UserEventHandler implements EventHandler {
                 case ApiGatewayUtil.DELETE:
                     response = unsubscribeFromQueue(userId, queueId) ?
                             buildSuccessResponse(null, ResponseModel.SUCCESS_MESSAGE) :
-                            buildFailureResponse(502, ResponseModel.FAILURE_MESSAGE);
+                            buildFailureResponse(502, queueId == null ? ResponseModel.FAILURE_MESSAGE : "queue_id parameter is missing");
                     break;
 
                 default:
@@ -71,10 +71,11 @@ public class UserEventHandler implements EventHandler {
 
     private boolean unsubscribeFromQueue(String userId, String queueId) {
         boolean success = false;
+        if (queueId == null) return false;
         try {
             success = userService.unsubscribeUserFromQueue(userId, queueId);
         } catch (Exception e) {
-            LOGGER.error("Error occurred while unsubscribing user {} from queue {}", userId, queueId, e);
+            LOGGER.error("Error occurred while un-subscribing user {} from queue {}", userId, queueId, e);
         }
 
         return success;

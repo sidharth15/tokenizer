@@ -62,8 +62,10 @@ public class UserService {
         boolean deleted = false;
 
         try {
-            deleteUserQueueLink(userId, queueId);
-            deleted = true;
+            if (!isQueueOwner(userId, queueId)) {
+                deleteUserQueueLink(userId, queueId);
+                deleted = true;
+            }
         } catch (Exception e) {
             LOGGER.error("Error occurred while un-subscribing user {} from queue {}: {}", userId, queueId, e);
         }
