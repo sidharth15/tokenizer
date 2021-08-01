@@ -20,11 +20,17 @@ public class UserService {
     /**
      * Method to fetch all records of the user.
      * The resulting list of User gives all the queues the user owns or is subscribed to.
+     *
      * @param userId The user's user_id.
-     * @return List of User objects, each pointing to a separate Queue. Null if no items were found for the user.
+     *
+     * @param ownedByUser Flag to filter queues owned by the user or not.
+     *                    If null, all queues linked to the user are returned.
+     *
+     * @return List of User objects, each pointing to a separate Queue.
+     * An empty List if no items were found for the user.
      * */
-    public List<User> describeUser(String userId) {
-        List<User> queuesForUser = repository.load(userId);
+    public List<User> describeUser(String userId, Boolean ownedByUser) {
+        List<User> queuesForUser = repository.load(userId, ownedByUser);
 
         return queuesForUser != null ? queuesForUser: new ArrayList<>();
     }
@@ -33,7 +39,9 @@ public class UserService {
      * Method to create a new queue that will be owned by the user.
      * This does not imply a subscription to the queue since the owner cannot subscribe to their own queue.
      * Hence, The created link will not have a token number.
+     *
      * @param userId The user that is creating the new queue.
+     *
      * @return The ID of the newly created queue, null if failed to create queue.
      * */
     public String createNewQueueForUser(String userId) {

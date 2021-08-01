@@ -1,5 +1,6 @@
 package com.tokenizer.lambda.requests.handlers;
 
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tokenizer.lambda.model.response.ResponseModel;
@@ -11,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class UserEventHandler implements EventHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserEventHandler.class);
@@ -37,7 +37,7 @@ public class UserEventHandler implements EventHandler {
             switch (httpMethod) {
                 case ApiGatewayUtil.GET:
                     try {
-                        List<User> userQueues = describeUser(userId, Boolean.parseBoolean(owner));
+                        List<User> userQueues = describeUser(userId, owner == null ? null : Boolean.parseBoolean(owner));
                         response = buildSuccessResponse(userQueues, ResponseModel.SUCCESS_MESSAGE);
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while describing user {}", userId, e);
@@ -46,9 +46,9 @@ public class UserEventHandler implements EventHandler {
                     break;
 
                 case ApiGatewayUtil.DELETE:
-                    response = unsubscribeFromQueue(userId, queueId) ?
-                            buildSuccessResponse(null, ResponseModel.SUCCESS_MESSAGE) :
-                            buildFailureResponse(502, queueId == null ? ResponseModel.FAILURE_MESSAGE : "queue_id parameter is missing");
+                     response = queueId != null ?
+                             unsubscribeFromQueue(userId, queueId):
+                             buildFailureResponse(400, "queue_id parameter is missing");
                     break;
 
                 default:
@@ -60,25 +60,29 @@ public class UserEventHandler implements EventHandler {
         return ApiGatewayUtil.getResponseJsonString(mapper, response);
     }
 
-    private List<User> describeUser(String userId, boolean ownedByUser) {
+    private List<User> describeUser(String userId, Boolean ownedByUser) {
         // list of queues user is subscribed to or owns
-        List<User> userQueues = userService.describeUser(userId);
-
-        return ownedByUser ?
-                userQueues.stream().filter(User::isOwner).collect(Collectors.toList()):
-                userQueues;
+        return userService.describeUser(userId, ownedByUser);
     }
 
-    private boolean unsubscribeFromQueue(String userId, String queueId) {
-        boolean success = false;
-        if (queueId == null) return false;
+    private ResponseModel<List<User>> unsubscribeFromQueue(String userId, String queueId) {
+        ResponseModel<List<User>> response;
+
         try {
-            success = userService.unsubscribeUserFromQueue(userId, queueId);
+            boolean isSuccess = userService.unsubscribeUserFromQueue(userId, queueId);
+            response = isSuccess ?
+                    buildSuccessResponse(null, ResponseModel.SUCCESS_MESSAGE) :
+                    buildFailureResponse(502, "An unexpected error occurred");
+
+        } catch (ConditionalCheckFailedException e) {
+            LOGGER.warn("Cannot unsubscribe user {} from queue {}. User is the owner of the queue.", userId, queueId, e);
+            response = buildFailureResponse(400, "Cannot un-subscribe owner from their queue.");
         } catch (Exception e) {
-            LOGGER.error("Error occurred while un-subscribing user {} from queue {}", userId, queueId, e);
+            LOGGER.error("Unexpected error occurred: ", e);
+            response = buildFailureResponse(502, "An unexpected error occurred.");
         }
 
-        return success;
+        return response;
     }
 
     private ResponseModel<List<User>> buildSuccessResponse(List<User> users, String message) {

@@ -48,17 +48,30 @@ public class UserRepository {
     }
 
     /**
-     * Method to query all entries for a particulr user.
+     * Method to query all entries for a particular user.
      * @param userId The userId to query.
+     * @param ownedByUser Flag to indicate if query should be filter based on
+     *                    whether user owns the queue or not.
      * @return List of entries for the user. If no items are found, returns null.
      * */
-    public List<User> load(String userId) {
+    public List<User> load(String userId, Boolean ownedByUser) {
         List<User> result = null;
 
         if (userId != null) {
             User lookup = new User(userId);
             DynamoDBQueryExpression<User> queryExpression = new DynamoDBQueryExpression<User>()
                     .withHashKeyValues(lookup);
+
+            queryExpression = ownedByUser == null ?
+                    queryExpression :
+                    queryExpression.withFilterExpression("#owner = :owner")
+                    .withExpressionAttributeNames(new HashMap<String, String>() {{
+                        put("#owner", User.COL_QUEUE_OWNER);
+                    }})
+                    .withExpressionAttributeValues(new HashMap<String, AttributeValue>() {{
+                        put(":owner", new AttributeValue().withBOOL(ownedByUser));
+                    }});
+
             result = mapper.query(User.class, queryExpression);
         } else {
             LOGGER.warn("Query - {}", WARN_MESSAGE);
