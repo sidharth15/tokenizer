@@ -41,7 +41,6 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
 
         this.ean = new HashMap<String, String>() {{
             put("#last_generated_token", Queue.COL_LAST_GEN_TOKEN);
-            put("#last_processed_token", Queue.COL_LAST_PROC_TOKEN);
             put("#max_size", Queue.COL_MAX_SIZE);
         }};
 
@@ -125,7 +124,7 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
                 .withTableName(Queue.TABLE_NAME)
                 .withKey(key)
                 .withUpdateExpression("set #last_generated_token = #last_generated_token + :one")
-                .withConditionExpression("(#last_generated_token - #last_processed_token) < #max_size")
+                .withConditionExpression("#last_generated_token < #max_size")
                 .withExpressionAttributeNames(ean)
                 .withExpressionAttributeValues(eav)
                 .withReturnValues(ReturnValue.UPDATED_NEW);
