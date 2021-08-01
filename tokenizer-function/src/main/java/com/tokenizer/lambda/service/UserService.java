@@ -1,5 +1,6 @@
 package com.tokenizer.lambda.service;
 
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.tokenizer.lambda.dao.UserRepository;
 import com.tokenizer.lambda.model.users.User;
 import com.tokenizer.lambda.util.QueueUtil;
@@ -29,7 +30,7 @@ public class UserService {
      * @return List of User objects, each pointing to a separate Queue.
      * An empty List if no items were found for the user.
      * */
-    public List<User> describeUser(String userId, Boolean ownedByUser) {
+    public List<User> describeUser(String userId, Boolean ownedByUser) throws ConditionalCheckFailedException {
         List<User> queuesForUser = repository.load(userId, ownedByUser);
 
         return queuesForUser != null ? queuesForUser: new ArrayList<>();

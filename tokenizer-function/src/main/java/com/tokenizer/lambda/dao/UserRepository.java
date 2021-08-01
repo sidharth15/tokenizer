@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDeleteExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.tokenizer.lambda.model.users.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,7 @@ public class UserRepository {
      *                    whether user owns the queue or not.
      * @return List of entries for the user. If no items are found, returns null.
      * */
-    public List<User> load(String userId, Boolean ownedByUser) {
+    public List<User> load(String userId, Boolean ownedByUser) throws ConditionalCheckFailedException {
         List<User> result = null;
 
         if (userId != null) {
