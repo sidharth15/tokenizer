@@ -72,6 +72,9 @@ public class UserEventHandler implements EventHandler {
             } else {
                 response = buildFailureResponse(401, "Not authorized to update queue " + queueId);
             }
+        } catch (ConditionalCheckFailedException e) {
+            LOGGER.warn("No more items to process.");
+            response = buildFailureResponse(400, "No more items to process in queue " + queueId);
         } catch (Exception e) {
             LOGGER.error("Exception occurred while updating last_processed_token: ", e);
             response = buildFailureResponse(502, ResponseModel.FAILURE_MESSAGE);

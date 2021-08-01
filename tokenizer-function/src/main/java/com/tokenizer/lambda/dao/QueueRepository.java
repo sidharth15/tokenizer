@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.ScanResultPage;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
@@ -87,7 +88,7 @@ public class QueueRepository {
      * @param queueId The ID of the queue to update.
      * @return The updated value for last_processed_token.
      * */
-    public String incrementLastProcessedToken(String queueId) {
+    public String incrementLastProcessedToken(String queueId) throws ConditionalCheckFailedException {
         AmazonDynamoDB dynamoDbClient = DynamoUtil.DYNAMO_CLIENT;
 
         UpdateItemRequest updateItemRequest = new UpdateItemRequest()

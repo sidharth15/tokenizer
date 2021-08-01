@@ -1,6 +1,7 @@
 package com.tokenizer.lambda.service;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.ScanResultPage;
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.tokenizer.lambda.dao.QueueRepository;
 import com.tokenizer.lambda.model.queues.Queue;
 
@@ -52,7 +53,7 @@ public class QueueService {
         return queues != null ? queues: new ArrayList<>();
     }
 
-    public String processItemFromQueue(String queueId) {
+    public String processItemFromQueue(String queueId) throws ConditionalCheckFailedException {
         return repository.incrementLastProcessedToken(queueId);
     }
 }
