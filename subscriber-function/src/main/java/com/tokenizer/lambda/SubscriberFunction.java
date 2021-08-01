@@ -67,7 +67,7 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
         response.setStatusCode(200);
         response.setHeaders(headers);
 
-        String responseBody = null;
+        String responseBody;
 
         try {
             LOGGER.debug("Received event: {}", objectMapper.writeValueAsString(input));
@@ -79,7 +79,13 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
                     String tokenNum = incrementLastGeneratedToken(queueId);
                     createSubscriptionLink(userId, queueId, tokenNum);
                     responseBody = "{\"token_number\":\"" + tokenNum +" \"}";
+                } else {
+                    response.setStatusCode(400);
+                    responseBody = "{\"errorMessage\":\"queue_id parameter is missing\"}";
                 }
+            } else {
+                response.setStatusCode(401);
+                responseBody = "{\"errorMessage\":\"Unauthenticated. Login before invoking the API.\"}";
             }
 
         } catch (JsonProcessingException e) {
