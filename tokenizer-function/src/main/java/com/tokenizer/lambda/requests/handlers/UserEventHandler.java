@@ -70,7 +70,8 @@ public class UserEventHandler implements EventHandler {
                 String lastProcessedToken = queueService.processItemFromQueue(queueId);
                 response = buildSuccessResponse(null, lastProcessedToken);
             } else {
-                response = buildFailureResponse(401, "Not authorized to update queue " + queueId);
+                response = buildFailureResponse(401, "Queues does not exist or " +
+                        "you are not authorized to update queue " + queueId);
             }
         } catch (ConditionalCheckFailedException e) {
             LOGGER.warn("No more items to process.");
