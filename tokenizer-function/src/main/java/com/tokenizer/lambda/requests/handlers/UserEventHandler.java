@@ -37,8 +37,7 @@ public class UserEventHandler implements EventHandler {
             switch (httpMethod) {
                 case ApiGatewayUtil.GET:
                     try {
-                        List<User> userQueues = describeUser(userId, owner == null ? null : Boolean.parseBoolean(owner));
-                        response = buildSuccessResponse(userQueues, ResponseModel.SUCCESS_MESSAGE);
+                        response = describeUser(userId, owner == null ? null : Boolean.parseBoolean(owner));
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while describing user {}", userId, e);
                         response = buildFailureResponse(502, "An unexpected error occurred.");
@@ -60,19 +59,26 @@ public class UserEventHandler implements EventHandler {
         return ApiGatewayUtil.getResponseJsonString(mapper, response);
     }
 
-    private List<User> describeUser(String userId, Boolean ownedByUser) {
-        // list of queues user is subscribed to or owns
-        return userService.describeUser(userId, ownedByUser);
+    private ResponseModel<List<User>> describeUser(String userId, Boolean ownedByUser) {
+        ResponseModel<List<User>> response;
+        try {
+            // list of queues user is subscribed to or owns
+            List<User> userQueues = userService.describeUser(userId, ownedByUser);
+            response = buildSuccessResponse(userQueues, ResponseModel.SUCCESS_MESSAGE);
+        } catch (Exception e) {
+            LOGGER.error("Error occurred while describing user {}", userId, e);
+            response = buildFailureResponse(502, "An unexpected error occurred.");
+        }
+
+        return response;
     }
 
     private ResponseModel<List<User>> unsubscribeFromQueue(String userId, String queueId) {
         ResponseModel<List<User>> response;
 
         try {
-            boolean isSuccess = userService.unsubscribeUserFromQueue(userId, queueId);
-            response = isSuccess ?
-                    buildSuccessResponse(null, ResponseModel.SUCCESS_MESSAGE) :
-                    buildFailureResponse(502, "An unexpected error occurred");
+            userService.unsubscribeUserFromQueue(userId, queueId);
+            response = buildSuccessResponse(null, ResponseModel.SUCCESS_MESSAGE);
 
         } catch (ConditionalCheckFailedException e) {
             LOGGER.warn("Cannot unsubscribe user {} from queue {}. User is the owner of the queue.", userId, queueId, e);

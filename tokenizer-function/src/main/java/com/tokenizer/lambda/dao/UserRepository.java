@@ -55,7 +55,7 @@ public class UserRepository {
      *                    whether user owns the queue or not.
      * @return List of entries for the user. If no items are found, returns null.
      * */
-    public List<User> load(String userId, Boolean ownedByUser) throws ConditionalCheckFailedException {
+    public List<User> load(String userId, Boolean ownedByUser) {
         List<User> result = null;
 
         if (userId != null) {
@@ -117,7 +117,7 @@ public class UserRepository {
      *                        If set to False, delete will be successful only if the user
      *                        owns the queue.
      * */
-    public void delete(User userToDelete, boolean unsubscribeOnly) {
+    public void delete(User userToDelete, boolean unsubscribeOnly) throws ConditionalCheckFailedException {
         if (isValid(userToDelete)) {
             Map<String, String> ean = new HashMap<String, String>() {{
                 put("#owner", User.COL_QUEUE_OWNER);

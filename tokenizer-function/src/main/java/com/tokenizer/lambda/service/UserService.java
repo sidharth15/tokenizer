@@ -30,7 +30,7 @@ public class UserService {
      * @return List of User objects, each pointing to a separate Queue.
      * An empty List if no items were found for the user.
      * */
-    public List<User> describeUser(String userId, Boolean ownedByUser) throws ConditionalCheckFailedException {
+    public List<User> describeUser(String userId, Boolean ownedByUser) {
         List<User> queuesForUser = repository.load(userId, ownedByUser);
 
         return queuesForUser != null ? queuesForUser: new ArrayList<>();
@@ -65,20 +65,9 @@ public class UserService {
      * Method to un-subscribe a user from a queue, by deleting the entry linking the user and the queue.
      * @param userId The user_id of the user.
      * @param queueId The queue_id to unsubscribe from.
-     * @return true if successfully unsubscribed else returns false.
      * */
-    public boolean unsubscribeUserFromQueue(String userId, String queueId) {
-        boolean deleted = false;
-
-        try {
-            deleteUserQueueLink(userId, queueId, true);
-            deleted = true;
-
-        } catch (Exception e) {
-            LOGGER.error("Error occurred while un-subscribing user {} from queue {}: {}", userId, queueId, e);
-        }
-
-        return deleted;
+    public void unsubscribeUserFromQueue(String userId, String queueId) throws ConditionalCheckFailedException{
+        deleteUserQueueLink(userId, queueId, true);
     }
 
     /**
@@ -109,7 +98,7 @@ public class UserService {
      * @param unsubscribeOnly Flag to indicate if only want to un-subscribe
      *                        or delete the queue altogether.
      */
-    public void deleteUserQueueLink(String userId, String queueId, boolean unsubscribeOnly) {
+    public void deleteUserQueueLink(String userId, String queueId, boolean unsubscribeOnly) throws ConditionalCheckFailedException {
         repository.delete(new User(userId, queueId), unsubscribeOnly);
     }
 }
