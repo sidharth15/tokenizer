@@ -1,7 +1,9 @@
 package com.tokenizer.lambda.model.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ResponseModel<T> {
     public static final String STATUS_CODE = "status_code";
     public static final String MESSAGE = "message";
