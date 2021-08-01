@@ -46,9 +46,10 @@ public class QueueEventHandler implements EventHandler {
                 case ApiGatewayUtil.POST :
                     response = createNewQueue(
                             userId,
-                            queueName != null ? queueName: userId + "_queue_" + input.getRequestContext().getRequestId(),
+                            queueName,
                             queueSize,
-                            queueDisabled);
+                            queueDisabled,
+                            input.getRequestContext().getRequestId());
                     break;
 
                 case ApiGatewayUtil.DELETE:
@@ -91,10 +92,12 @@ public class QueueEventHandler implements EventHandler {
      * @param disabled The status of the queue to be initialized with.
      * @return The response to the user.
      * */
-    private ResponseModel<Queue> createNewQueue(String userId, String queueName, String maxSize, String disabled) {
+    private ResponseModel<Queue> createNewQueue(String userId, String queueName, String maxSize,
+                                                String disabled, String awsRequestId) {
         ResponseModel<Queue> response;
         Integer size;
         boolean disabledStatus = Boolean.parseBoolean(disabled);
+        queueName = queueName != null ? queueName: userId + "_queue_" + awsRequestId;
 
         try {
             size = Integer.parseInt(maxSize);
@@ -103,7 +106,7 @@ public class QueueEventHandler implements EventHandler {
         }
 
         try{
-            String queueId = userService.createNewQueueForUser(userId);
+            String queueId = userService.createNewQueueForUser(userId, awsRequestId);
             Queue newQueue = queueService.initNewQueue(queueId, queueName, size, disabledStatus);
             response = buildSuccessMessage(newQueue, ResponseModel.SUCCESS_MESSAGE);
         } catch (Exception e) {

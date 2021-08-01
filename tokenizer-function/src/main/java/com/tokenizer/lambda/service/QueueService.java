@@ -38,7 +38,9 @@ public class QueueService {
      * Method to scan and list the queues table.
      * The pagination token parameter is updated on each scan and
      * can be returned to the user.
+     *
      * @param paginationToken The pagination token passed by the user.
+     *
      * @return list of Queue objects in the current scanned page.
      * */
     public List<Queue> listQueues(String paginationToken) {

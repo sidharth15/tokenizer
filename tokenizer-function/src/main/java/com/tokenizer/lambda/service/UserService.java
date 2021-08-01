@@ -3,7 +3,6 @@ package com.tokenizer.lambda.service;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.tokenizer.lambda.dao.UserRepository;
 import com.tokenizer.lambda.model.users.User;
-import com.tokenizer.lambda.util.QueueUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,13 +42,16 @@ public class UserService {
      *
      * @param userId The user that is creating the new queue.
      *
+     * @param queueId An ID that is unique across Lambda invocations.
+     *                The caller needs to ensure the uniqueness -
+     *                best way is to parse the aws request ID from
+     *                the input API Gateway event.
+     *
      * @return The ID of the newly created queue, null if failed to create queue.
      * */
-    public String createNewQueueForUser(String userId) {
-        String queueId;
+    public String createNewQueueForUser(String userId, String queueId) {
 
         try {
-            queueId = QueueUtil.generateQueueId();
             User userQueueRef = new User(userId, queueId);
             userQueueRef.setOwner(true);
             repository.save(userQueueRef);
