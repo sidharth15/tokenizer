@@ -96,8 +96,10 @@ public class QueueRepository {
                     put(Queue.COL_QUEUE_ID, new AttributeValue(queueId));
                 }})
                 .withUpdateExpression("set #last_processed_token = #last_processed_token + :one")
+                .withConditionExpression("last_processed_token < #last_generated_token")
                 .withExpressionAttributeNames(new HashMap<String, String>() {{
                     put("#last_processed_token", Queue.COL_LAST_PROC_TOKEN);
+                    put("#last_generated_token", Queue.COL_LAST_GEN_TOKEN);
                 }})
                 .withExpressionAttributeValues(new HashMap<String, AttributeValue>() {{
                     put(":one", new AttributeValue().withN("1"));
