@@ -30,29 +30,34 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
     private static final String APPLICATION_JSON = "application/json";
     private static final String UPDATE_EXP = "set #last_generated_token = #last_generated_token + :one";
     private static final String UPDATE_CONDITION = "attribute_exists(#queue_id) and (#last_generated_token < #max_size) and #disabled = :false";
-    private static final String PUT_CONDITION = "#token_number > :new_token_num";
+    private static final String PUT_CONDITION = "#token_num > :new_token_num";
 
 
     private ObjectMapper objectMapper;
     private AmazonDynamoDB dynamoDbClient;
-    private Map<String, String> ean;
-    private Map<String, AttributeValue> eav;
+    private Map<String, String> eanForUpdateExp;
+    private Map<String, AttributeValue> eavForUpdateExp;
+    private Map<String, String> eanForPutItem;
     private Map<String, String> headers;
 
     private void init() {
         this.objectMapper = new ObjectMapper();
         this.dynamoDbClient = DynamoUtil.DYNAMO_CLIENT;
 
-        this.ean = new HashMap<String, String>() {{
+        this.eanForUpdateExp = new HashMap<String, String>() {{
             put("#queue_id", Queue.COL_QUEUE_ID);
             put("#last_generated_token", Queue.COL_LAST_GEN_TOKEN);
             put("#max_size", Queue.COL_MAX_SIZE);
             put("#disabled", Queue.COL_DISABLED);
         }};
 
-        this.eav = new HashMap<String, AttributeValue>() {{
+        this.eavForUpdateExp = new HashMap<String, AttributeValue>() {{
             put(":one", new AttributeValue().withN("1"));
             put(":false", new AttributeValue().withBOOL(false));
+        }};
+
+        this.eanForPutItem = new HashMap<String, String>() {{
+            put("#token_num", User.COL_TOKEN_NUM);
         }};
 
         this.headers = new HashMap<String, String>() {{
@@ -102,9 +107,9 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
 
         } catch (ConditionalCheckFailedException e) {
 
-            LOGGER.warn("Conditional check failed - max limit for the must have been reached.", e);
+            LOGGER.warn("Conditional check failed - Queue does not exist or max limit for the must have been reached.", e);
             response.setStatusCode(400);
-            responseBody = "{\"errorMessage\":\"An error occurred - max size for queue reached\"}";
+            responseBody = "{\"errorMessage\":\"An error occurred - Queue does not exist or max size for queue reached\"}";
 
         } catch (Exception e) {
 
@@ -132,8 +137,8 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
                 .withKey(key)
                 .withUpdateExpression(UPDATE_EXP)
                 .withConditionExpression(UPDATE_CONDITION)
-                .withExpressionAttributeNames(ean)
-                .withExpressionAttributeValues(eav)
+                .withExpressionAttributeNames(eanForUpdateExp)
+                .withExpressionAttributeValues(eavForUpdateExp)
                 .withReturnValues(ReturnValue.UPDATED_NEW);
 
         UpdateItemResult updateItemResult = dynamoDbClient.updateItem(updateItemRequest);
@@ -156,7 +161,11 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
         PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(User.TABLE_NAME)
                 .withItem(attributeValues)
-                .withConditionExpression(PUT_CONDITION);
+                .withConditionExpression(PUT_CONDITION)
+                .withExpressionAttributeNames(eanForPutItem)
+                .withExpressionAttributeValues(new HashMap<String, AttributeValue>() {{
+                    put(":new_token_num", new AttributeValue().withN(tokenNumber));
+                }});
 
         dynamoDbClient.putItem(putItemRequest);
 
