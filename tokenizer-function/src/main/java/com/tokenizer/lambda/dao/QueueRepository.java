@@ -92,6 +92,9 @@ public class QueueRepository {
 
         UpdateItemRequest updateItemRequest = new UpdateItemRequest()
                 .withTableName(Queue.TABLE_NAME)
+                .withKey(new HashMap<String, AttributeValue>() {{
+                    put(Queue.COL_QUEUE_ID, new AttributeValue(queueId));
+                }})
                 .withUpdateExpression("set #last_processed_token = #last_processed_token + 1")
                 .withExpressionAttributeNames(new HashMap<String, String>() {{
                     put("#last_processed_token", Queue.COL_LAST_PROC_TOKEN);
