@@ -3,6 +3,7 @@ package com.tokenizer.lambda.service;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.tokenizer.lambda.dao.UserRepository;
 import com.tokenizer.lambda.model.users.User;
+import com.tokenizer.lambda.model.users.UserState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,8 @@ public class UserService {
 
     /**
      * Method to create a new queue that will be owned by the user.
-     * This does not imply a subscription to the queue since the owner cannot subscribe to their own queue.
+     * This does not imply a subscription to the queue since the
+     * owner cannot subscribe to their own queue.
      * Hence, The created link will not have a token number.
      *
      * @param userId The user that is creating the new queue.
@@ -102,5 +104,46 @@ public class UserService {
      */
     public void deleteUserQueueLink(String userId, String queueId, boolean unsubscribeOnly) throws ConditionalCheckFailedException {
         repository.delete(new User(userId, queueId), unsubscribeOnly);
+    }
+
+    /**
+     * Method to mark a subscriber of a queue with the
+     * mentioned token number as 'DONE'.
+     * @param queueId The queue to which the user is subscribed to.
+     * @param tokenNumber The token number of the subscribed user.
+     * */
+    public boolean markSubscriberAsProcessed(String queueId, String tokenNumber) {
+        boolean success = false;
+        User subscriber = getSubscriberAtPosition(queueId, tokenNumber);
+
+        if (subscriber != null) {
+            subscriber.setState(UserState.DONE);
+
+            repository.save(subscriber);
+            success = true;
+        }
+
+        return success;
+    }
+
+    /**
+     * Method to lookup a subscriber at a given position
+     * of a queue.
+     * @param queueId The queue to which the user is subscribed.
+     * @param tokenNumber The position of the user in the queue.
+     * @return User object if there is a user is found with the mentioned
+     * token number, Else returns null.
+     * */
+    private User getSubscriberAtPosition(String queueId, String tokenNumber) {
+        User subscriberAtPosition = null;
+
+        try {
+            int token = Integer.parseInt(tokenNumber);
+            subscriberAtPosition = repository.lookupByTokenNumber(queueId, token);
+        } catch (NumberFormatException e) {
+            LOGGER.error("Error parsing token number: {}", tokenNumber);
+        }
+
+        return subscriberAtPosition;
     }
 }

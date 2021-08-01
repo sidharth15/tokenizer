@@ -63,20 +63,45 @@ public class UserEventHandler implements EventHandler {
         return ApiGatewayUtil.getResponseJsonString(mapper, response);
     }
 
+    /**
+     * Method to process the item at the HEAD of the queue.
+     * This method does 2 things:
+     * 1. Increment the last_processed_token of the queue by 1.
+     * 2. Mark the user at the last_processed_token position of the queue as DONE.
+     *
+     * @param userId The ID of the user invoking the process-item request.
+     *               This should equal to the ID of the owner of the queue
+     *               for the operation to succeed.
+     *
+     * @param queueId The ID of the queue in which the item is being processed.
+     *
+     * @return Response to the user with the last_processed_token
+     * */
     private ResponseModel<List<User>> processItemFromQueue(String userId, String queueId) {
         ResponseModel<List<User>> response;
         try{
             if (userService.isQueueOwner(userId, queueId)) {
                 String lastProcessedToken = queueService.processItemFromQueue(queueId);
+
+                boolean unsubscribed = userService.markSubscriberAsProcessed(queueId, lastProcessedToken);
+                if (!unsubscribed) {
+                    LOGGER.warn("Could not unsubscribe user at position {} of queue {}", lastProcessedToken, queueId);
+                }
+
                 response = buildSuccessResponse(null, lastProcessedToken);
+
             } else {
                 response = buildFailureResponse(401, "Queues does not exist or " +
                         "you are not authorized to update queue " + queueId);
             }
+
         } catch (ConditionalCheckFailedException e) {
+
             LOGGER.warn("No more items to process.");
             response = buildFailureResponse(400, "No more items to process in queue " + queueId);
+
         } catch (Exception e) {
+
             LOGGER.error("Exception occurred while updating last_processed_token: ", e);
             response = buildFailureResponse(502, ResponseModel.FAILURE_MESSAGE);
         }

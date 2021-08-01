@@ -26,12 +26,18 @@ public class User {
     private String queueId;
     private boolean owner;
     private Integer tokenNumber;
+    private UserState state;
 
     public User() {}
 
     public User(String userId, String queueId) {
         this.userId = userId;
         this.queueId = queueId;
+    }
+
+    public User(String queueId, Integer tokenNumber) {
+        this.queueId = queueId;
+        this.tokenNumber = tokenNumber;
     }
 
     public User(String userId) {
@@ -76,6 +82,14 @@ public class User {
         this.tokenNumber = tokenNumber;
     }
 
+    public UserState getState() {
+        return state;
+    }
+
+    public void setState(UserState state) {
+        this.state = state;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -84,7 +98,8 @@ public class User {
         return owner == user.owner &&
                 userId.equals(user.userId) &&
                 queueId.equals(user.queueId) &&
-                tokenNumber.equals(user.tokenNumber);
+                Objects.equals(tokenNumber, user.tokenNumber) &&
+                state == user.state;
     }
 
     @Override
@@ -99,6 +114,7 @@ public class User {
                 ", queueId='" + queueId + '\'' +
                 ", owner=" + owner +
                 ", tokenNumber=" + tokenNumber +
+                ", state=" + state +
                 '}';
     }
 }

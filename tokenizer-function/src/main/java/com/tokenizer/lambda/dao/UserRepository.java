@@ -9,9 +9,12 @@ import com.tokenizer.lambda.model.users.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public class UserRepository {
     private static final String WARN_MESSAGE = "Entity is null or no user_id/queue_id provided.";
@@ -81,8 +84,32 @@ public class UserRepository {
         return result;
     }
 
+    public User lookupByTokenNumber(String queueId, int tokenNumber) {
+        User result = null;
+
+        if (queueId != null) {
+            User lookup = new User(queueId, tokenNumber);
+            DynamoDBQueryExpression<User> queryExpression = new DynamoDBQueryExpression<User>()
+                    .withIndexName(User.QUEUE_GSI)
+                    .withConsistentRead(false)
+                    .withHashKeyValues(lookup);
+
+            List<User> subscribers = mapper.query(User.class, queryExpression);
+
+            // The list should ideally only contain a single item
+            result = Optional.ofNullable(subscribers)
+                    .map(Collection::stream)
+                    .orElseGet(Stream::empty)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        return result;
+    }
+
     /**
-     * Method to lookup users that are subscribed to a queue.
+     * Method to lookup users that are subscribed to a queue
+     * by querying the queue_gsi index of the table.
      * @param queueId The ID of the queue to check.
      * @return List of users subscribed to the queue. Null if queue has no subscribers.
      * */
