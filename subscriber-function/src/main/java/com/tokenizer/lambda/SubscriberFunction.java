@@ -103,6 +103,7 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
         } catch (Exception e) {
 
             response.setStatusCode(502);
+            LOGGER.error("Fatal error occurred: ", e);
             responseBody = "{\"errorMessage\":\"Fatal error - contact support with this reference id"
                     + input.getRequestContext().getRequestId() + "\"}";
 
