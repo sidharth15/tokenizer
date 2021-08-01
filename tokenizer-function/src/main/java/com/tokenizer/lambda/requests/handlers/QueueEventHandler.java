@@ -44,18 +44,11 @@ public class QueueEventHandler implements EventHandler {
 
             switch (httpMethod) {
                 case ApiGatewayUtil.POST :
-
-                    String newQueueId = createNewQueue(
+                    response = createNewQueue(
                             userId,
                             queueName != null ? queueName: userId + "_queue_" + input.getRequestContext().getRequestId(),
                             queueSize,
                             queueDisabled);
-
-                    if (newQueueId != null) {
-                        response = buildSuccessMessage(new Queue(newQueueId), ResponseModel.SUCCESS_MESSAGE);
-                    } else {
-                        response = buildFailureMessage(502, "Failed to create queue");
-                    }
                     break;
 
                 case ApiGatewayUtil.DELETE:
@@ -96,21 +89,30 @@ public class QueueEventHandler implements EventHandler {
      * @param userId The ID of the user creating the queue.
      * @param maxSize The max size of the queue.
      * @param disabled The status of the queue to be initialized with.
-     * @return The ID of the newly created queue.
+     * @return The response to the user.
      * */
-    private String createNewQueue(String userId, String queueName, String maxSize, String disabled) {
+    private ResponseModel<Queue> createNewQueue(String userId, String queueName, String maxSize, String disabled) {
+        ResponseModel<Queue> response;
         Integer size;
         boolean disabledStatus = Boolean.parseBoolean(disabled);
+
         try {
             size = Integer.parseInt(maxSize);
         } catch (NumberFormatException e) {
             size = Queue.DEFAULT_MAX_SIZE;
         }
 
-        String queueId = userService.createNewQueueForUser(userId);
-        queueService.initNewQueue(queueId, queueName, size, disabledStatus);
+        try{
+            String queueId = userService.createNewQueueForUser(userId);
+            Queue newQueue = queueService.initNewQueue(queueId, queueName, size, disabledStatus);
+            response = buildSuccessMessage(newQueue, ResponseModel.SUCCESS_MESSAGE);
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error occurred while creating queue: ", e);
+            response = buildFailureMessage(502, ResponseModel.FAILURE_MESSAGE);
+        }
 
-        return queueId;
+
+        return response;
     }
 
     /**

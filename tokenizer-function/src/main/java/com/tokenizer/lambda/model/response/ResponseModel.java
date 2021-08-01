@@ -10,7 +10,7 @@ public class ResponseModel<T> {
     public static final String VALUES = "values";
     public static final String PAGINATION_TOKEN = "pagination_token";
     public static final String SUCCESS_MESSAGE = "SUCCESS";
-    public static final String FAILURE_MESSAGE = "FAILURE";
+    public static final String FAILURE_MESSAGE = "An unexpected error occurred";
 
     private Integer statusCode;
     private String message;
