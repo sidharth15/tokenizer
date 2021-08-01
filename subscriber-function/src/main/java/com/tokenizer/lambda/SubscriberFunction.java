@@ -28,6 +28,10 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscriberFunction.class);
     private static final String CONTENTTYPE = "Content-Type";
     private static final String APPLICATION_JSON = "application/json";
+    private static final String UPDATE_EXP = "set #last_generated_token = #last_generated_token + :one";
+    private static final String UPDATE_CONDITION = "attribute_exists(#queue_id) and (#last_generated_token < #max_size) and #disabled = :false";
+    private static final String PUT_CONDITION = "#token_number > :new_token_num";
+
 
     private ObjectMapper objectMapper;
     private AmazonDynamoDB dynamoDbClient;
@@ -40,12 +44,14 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
         this.dynamoDbClient = DynamoUtil.DYNAMO_CLIENT;
 
         this.ean = new HashMap<String, String>() {{
+            put("#queue_id", Queue.COL_QUEUE_ID);
             put("#last_generated_token", Queue.COL_LAST_GEN_TOKEN);
             put("#max_size", Queue.COL_MAX_SIZE);
         }};
 
         this.eav = new HashMap<String, AttributeValue>() {{
             put(":one", new AttributeValue().withN("1"));
+            put(":false", new AttributeValue().withBOOL(false));
         }};
 
         this.headers = new HashMap<String, String>() {{
@@ -123,8 +129,8 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
         UpdateItemRequest updateItemRequest = new UpdateItemRequest()
                 .withTableName(Queue.TABLE_NAME)
                 .withKey(key)
-                .withUpdateExpression("set #last_generated_token = #last_generated_token + :one")
-                .withConditionExpression("#last_generated_token < #max_size")
+                .withUpdateExpression(UPDATE_EXP)
+                .withConditionExpression(UPDATE_CONDITION)
                 .withExpressionAttributeNames(ean)
                 .withExpressionAttributeValues(eav)
                 .withReturnValues(ReturnValue.UPDATED_NEW);
@@ -149,7 +155,7 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
         PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(User.TABLE_NAME)
                 .withItem(attributeValues)
-                .withConditionExpression("#token_number > :new_token_num");
+                .withConditionExpression(PUT_CONDITION);
 
         dynamoDbClient.putItem(putItemRequest);
 
