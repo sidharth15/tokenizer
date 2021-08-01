@@ -22,11 +22,13 @@ phases:
       - echo Copying jar files to common directory
       - mkdir artifacts/
       - cp tokenizer-function/target/tokenizer-function.jar artifacts/
+      - cp subscriber-function/target/subscriber-function.jar artifacts/
       - ls artifacts/
       - "aws s3 cp artifacts s3://sidharthramesh/codebuild/tokenizer_build/ --recursive"
 artifacts:
   files:
     - '**/tokenizer-function.jar'
+    - '**/subscriber-function.jar'
   name: tokenizer-function-artifact
   discard-paths: yes
   s3-prefix: jarFiles

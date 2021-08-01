@@ -13,6 +13,7 @@
 
     <modules>
         <module>tokenizer-function</module>
+        <module>subscriber-function</module>
     </modules>
 
     <properties>
@@ -68,6 +69,18 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson.version}</version>
+            </dependency>
+
+            <!-- Tokenizer modules dependencies -->
+            <dependency>
+                <groupId>com.tokenizer</groupId>
+                <artifactId>tokenizer-function</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tokenizer</groupId>
+                <artifactId>subscriber-function</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
             <!--Logging dependencies-->
