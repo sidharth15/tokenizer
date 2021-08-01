@@ -93,11 +93,11 @@ public class QueueEventHandler implements EventHandler {
      * @return The response to the user.
      * */
     private ResponseModel<Queue> createNewQueue(String userId, String queueName, String maxSize,
-                                                String disabled, String awsRequestId) {
+                                                String disabled, String queueId) {
         ResponseModel<Queue> response;
         Integer size;
         boolean disabledStatus = Boolean.parseBoolean(disabled);
-        queueName = queueName != null ? queueName: userId + "_queue_" + awsRequestId;
+        queueName = queueName != null ? queueName: userId + "_queue_" + queueId;
 
         try {
             size = Integer.parseInt(maxSize);
@@ -106,7 +106,7 @@ public class QueueEventHandler implements EventHandler {
         }
 
         try{
-            String queueId = userService.createNewQueueForUser(userId, awsRequestId);
+            userService.createNewQueueForUser(userId, queueId);
             Queue newQueue = queueService.initNewQueue(queueId, queueName, size, disabledStatus);
             response = buildSuccessMessage(newQueue, ResponseModel.SUCCESS_MESSAGE);
         } catch (Exception e) {

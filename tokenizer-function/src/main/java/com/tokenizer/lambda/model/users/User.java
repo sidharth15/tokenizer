@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperFieldModel;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConvertedEnum;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTyped;
 
 import java.util.Objects;
@@ -21,6 +22,7 @@ public class User {
     public static final String COL_QUEUE_ID = "queue_id";
     public static final String COL_QUEUE_OWNER = "owner";
     public static final String COL_TOKEN_NUM = "token_num";
+    public static final String COL_USER_STATE = "user_state";
 
     private String userId;
     private String queueId;
@@ -82,6 +84,8 @@ public class User {
         this.tokenNumber = tokenNumber;
     }
 
+    @DynamoDBTypeConvertedEnum
+    @DynamoDBAttribute(attributeName = COL_USER_STATE)
     public UserState getState() {
         return state;
     }

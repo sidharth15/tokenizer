@@ -48,21 +48,12 @@ public class UserService {
      *                The caller needs to ensure the uniqueness -
      *                best way is to parse the aws request ID from
      *                the input API Gateway event.
-     *
-     * @return The ID of the newly created queue, null if failed to create queue.
      * */
-    public String createNewQueueForUser(String userId, String queueId) {
+    public void createNewQueueForUser(String userId, String queueId) {
+        User userQueueRef = new User(userId, queueId);
+        userQueueRef.setOwner(true);
 
-        try {
-            User userQueueRef = new User(userId, queueId);
-            userQueueRef.setOwner(true);
-            repository.save(userQueueRef);
-        } catch (Exception e) {
-            LOGGER.error("Exception occurred while creating new queue for user {}: {}", userId, e);
-            queueId = null;
-        }
-
-        return queueId;
+        repository.save(userQueueRef);
     }
 
     /**
