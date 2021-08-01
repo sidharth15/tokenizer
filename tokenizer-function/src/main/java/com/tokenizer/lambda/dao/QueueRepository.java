@@ -95,9 +95,12 @@ public class QueueRepository {
                 .withKey(new HashMap<String, AttributeValue>() {{
                     put(Queue.COL_QUEUE_ID, new AttributeValue(queueId));
                 }})
-                .withUpdateExpression("set #last_processed_token = #last_processed_token + 1")
+                .withUpdateExpression("set #last_processed_token = #last_processed_token + :one")
                 .withExpressionAttributeNames(new HashMap<String, String>() {{
                     put("#last_processed_token", Queue.COL_LAST_PROC_TOKEN);
+                }})
+                .withExpressionAttributeValues(new HashMap<String, AttributeValue>() {{
+                    put(":one", new AttributeValue().withN("1"));
                 }})
                 .withReturnValues(ReturnValue.UPDATED_NEW);
         UpdateItemResult updateItemResult = dynamoDbClient.updateItem(updateItemRequest);
