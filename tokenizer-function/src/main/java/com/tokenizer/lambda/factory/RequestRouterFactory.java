@@ -16,7 +16,7 @@ public class RequestRouterFactory {
         return new RequestRouter(
                 new QueueEventHandler(userService, queueService, mapper),
                 new ListQueuesEventHandler(queueService, mapper),
-                new UserEventHandler(userService, mapper),
+                new UserEventHandler(userService, queueService, mapper),
                 new GenericResponseHandler());
     }
 }
