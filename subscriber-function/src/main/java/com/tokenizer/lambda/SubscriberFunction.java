@@ -160,12 +160,7 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
 
         PutItemRequest putItemRequest = new PutItemRequest()
                 .withTableName(User.TABLE_NAME)
-                .withItem(attributeValues)
-                .withConditionExpression(PUT_CONDITION)
-                .withExpressionAttributeNames(eanForPutItem)
-                .withExpressionAttributeValues(new HashMap<String, AttributeValue>() {{
-                    put(":new_token_num", new AttributeValue().withN(tokenNumber));
-                }});
+                .withItem(attributeValues);
 
         dynamoDbClient.putItem(putItemRequest);
 
