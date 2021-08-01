@@ -47,6 +47,7 @@ public class SubscriberFunction implements RequestHandler<APIGatewayProxyRequest
             put("#queue_id", Queue.COL_QUEUE_ID);
             put("#last_generated_token", Queue.COL_LAST_GEN_TOKEN);
             put("#max_size", Queue.COL_MAX_SIZE);
+            put("#disabled", Queue.COL_DISABLED);
         }};
 
         this.eav = new HashMap<String, AttributeValue>() {{
