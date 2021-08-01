@@ -77,10 +77,10 @@ public class UserEventHandler implements EventHandler {
         } catch (ConditionalCheckFailedException e) {
             LOGGER.warn("Cannot unsubscribe user {} from queue {}. User is the owner of the queue.", userId, queueId, e);
             response = buildFailureResponse(400, "Cannot un-subscribe owner from their queue.");
-        } catch (Exception e) {
+        } /*catch (Exception e) {
             LOGGER.error("Unexpected error occurred: ", e);
             response = buildFailureResponse(502, "An unexpected error occurred.");
-        }
+        }*/
 
         return response;
     }
