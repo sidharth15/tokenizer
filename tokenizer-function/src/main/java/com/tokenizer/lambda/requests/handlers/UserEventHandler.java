@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tokenizer.lambda.model.response.ResponseModel;
 import com.tokenizer.lambda.model.users.User;
 import com.tokenizer.lambda.requests.EventHandler;
+import com.tokenizer.lambda.service.QueueService;
 import com.tokenizer.lambda.service.UserService;
 import com.tokenizer.lambda.util.ApiGatewayUtil;
 import org.slf4j.Logger;
@@ -17,10 +18,12 @@ public class UserEventHandler implements EventHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserEventHandler.class);
 
     private UserService userService;
+    private QueueService queueService;
     private ObjectMapper mapper;
 
-    public UserEventHandler(UserService userService, ObjectMapper mapper) {
+    public UserEventHandler(UserService userService, QueueService queueService, ObjectMapper mapper) {
         this.userService = userService;
+        this.queueService = queueService;
         this.mapper = mapper;
     }
 
@@ -35,13 +38,14 @@ public class UserEventHandler implements EventHandler {
             String queueId = ApiGatewayUtil.parseQueryStringParameter(input, User.COL_QUEUE_ID);
 
             switch (httpMethod) {
+                case ApiGatewayUtil.PUT:
+                    response = queueId != null ?
+                            processItemFromQueue(userId, queueId):
+                            buildFailureResponse(400, "queue_id parameter is missing");
+                    break;
+
                 case ApiGatewayUtil.GET:
-                    try {
-                        response = describeUser(userId, owner == null ? null : Boolean.parseBoolean(owner));
-                    } catch (Exception e) {
-                        LOGGER.error("Error occurred while describing user {}", userId, e);
-                        response = buildFailureResponse(502, "An unexpected error occurred.");
-                    }
+                    response = describeUser(userId, owner == null ? null : Boolean.parseBoolean(owner));
                     break;
 
                 case ApiGatewayUtil.DELETE:
@@ -57,6 +61,23 @@ public class UserEventHandler implements EventHandler {
         }
 
         return ApiGatewayUtil.getResponseJsonString(mapper, response);
+    }
+
+    private ResponseModel<List<User>> processItemFromQueue(String userId, String queueId) {
+        ResponseModel<List<User>> response;
+        try{
+            if (userService.isQueueOwner(userId, queueId)) {
+                String lastProcessedToken = queueService.processItemFromQueue(queueId);
+                response = buildSuccessResponse(null, lastProcessedToken);
+            } else {
+                response = buildFailureResponse(401, "Not authorized to update queue " + queueId);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while updating last_processed_token: ", e);
+            response = buildFailureResponse(502, ResponseModel.FAILURE_MESSAGE);
+        }
+
+        return response;
     }
 
     private ResponseModel<List<User>> describeUser(String userId, Boolean ownedByUser) {

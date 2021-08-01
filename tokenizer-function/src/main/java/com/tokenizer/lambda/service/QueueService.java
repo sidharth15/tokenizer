@@ -51,4 +51,8 @@ public class QueueService {
 
         return queues != null ? queues: new ArrayList<>();
     }
+
+    public String processItemFromQueue(String queueId) {
+        return repository.incrementLastProcessedToken(queueId);
+    }
 }

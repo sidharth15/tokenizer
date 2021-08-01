@@ -1,5 +1,6 @@
 package com.tokenizer.lambda.dao;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
@@ -7,7 +8,11 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.ScanResultPage;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
+import com.amazonaws.services.dynamodbv2.model.UpdateItemResult;
 import com.tokenizer.lambda.model.queues.Queue;
+import com.tokenizer.lambda.util.DynamoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +75,30 @@ public class QueueRepository {
         } else {
             LOGGER.warn("Update - {}", WARN_MESSAGE);
         }
+    }
+
+    /**
+     * Method to increment the last_processed_token of a queue by 1.
+     * Used when the user processes the current subscriber on the queue.
+     *
+     * We do not use the DynamoDbMapper here, since it does not have an
+     * option to directly increment the value of an attribute.
+     *
+     * @param queueId The ID of the queue to update.
+     * @return The updated value for last_processed_token.
+     * */
+    public String incrementLastProcessedToken(String queueId) {
+        AmazonDynamoDB dynamoDbClient = DynamoUtil.DYNAMO_CLIENT;
+
+        UpdateItemRequest updateItemRequest = new UpdateItemRequest()
+                .withTableName(Queue.TABLE_NAME)
+                .withUpdateExpression("set #last_processed_token = #last_processed_token + 1")
+                .withExpressionAttributeNames(new HashMap<String, String>() {{
+                    put("#last_processed_token", Queue.COL_LAST_PROC_TOKEN);
+                }})
+                .withReturnValues(ReturnValue.UPDATED_NEW);
+        UpdateItemResult updateItemResult = dynamoDbClient.updateItem(updateItemRequest);
+        return updateItemResult.getAttributes().get(Queue.COL_LAST_PROC_TOKEN).getN();
     }
 
     public void delete(Queue queueToDelete) {
